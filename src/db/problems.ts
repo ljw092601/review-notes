@@ -2,7 +2,7 @@ import { db, newId } from './db'
 import { problemInputSchema } from '@/models/schemas'
 import type { Attempt, AttemptResult, ImageRecord, Problem, ProblemInput } from '@/models/types'
 
-export type ProblemSort = 'createdDesc' | 'updatedDesc' | 'wrongCountDesc'
+export type ProblemSort = 'createdDesc' | 'updatedDesc' | 'reviewedDesc' | 'wrongCountDesc'
 
 export interface ProblemFilter {
   category?: string
@@ -10,6 +10,8 @@ export interface ProblemFilter {
   tags?: string[]
   /** 문제·정답·풀이·틀린 이유·출처 전문 검색 */
   search?: string
+  /** 최근 복습 결과. 'none'은 아직 안 풀어본 문제 */
+  result?: AttemptResult | 'none'
   sort?: ProblemSort
 }
 
@@ -101,15 +103,42 @@ export async function queryProblems(filter: ProblemFilter = {}): Promise<Problem
     )
   }
 
-  const problems = await collection.toArray()
+  let problems = await collection.toArray()
   const sort = filter.sort ?? 'createdDesc'
+  const needLatest = filter.result !== undefined || sort === 'reviewedDesc'
+  const latest = needLatest ? await latestAttempts(problems.map((p) => p.id)) : undefined
+
+  if (filter.result !== undefined && latest) {
+    const wanted = filter.result
+    problems = problems.filter((p) => {
+      const last = latest.get(p.id)
+      return wanted === 'none' ? !last : last?.result === wanted
+    })
+  }
+
   if (sort === 'createdDesc') problems.sort((a, b) => b.createdAt - a.createdAt)
   if (sort === 'updatedDesc') problems.sort((a, b) => b.updatedAt - a.updatedAt)
+  if (sort === 'reviewedDesc' && latest) {
+    const at = (p: Problem) => latest.get(p.id)?.attemptedAt ?? 0
+    problems.sort((a, b) => at(b) - at(a) || b.createdAt - a.createdAt)
+  }
   if (sort === 'wrongCountDesc') {
     const counts = await wrongAttemptCounts(problems.map((p) => p.id))
     problems.sort((a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || b.createdAt - a.createdAt)
   }
   return problems
+}
+
+/** 문제별 가장 최근 시도 하나씩 */
+export async function latestAttempts(problemIds: string[]): Promise<Map<string, Attempt>> {
+  const latest = new Map<string, Attempt>()
+  if (problemIds.length === 0) return latest
+  const attempts = await db.attempts.where('problemId').anyOf(problemIds).toArray()
+  for (const a of attempts) {
+    const prev = latest.get(a.problemId)
+    if (!prev || a.attemptedAt > prev.attemptedAt) latest.set(a.problemId, a)
+  }
+  return latest
 }
 
 async function wrongAttemptCounts(problemIds: string[]): Promise<Map<string, number>> {

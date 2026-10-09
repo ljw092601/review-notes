@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { RouterProvider, createMemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, test } from 'vitest'
@@ -7,6 +7,7 @@ import { router } from '@/App'
 import { createProblem, db } from '@/db'
 import { excerpt } from '@/lib/text'
 import { deriveStatus, validate, toFormValues } from '@/features/problems/form'
+import { EMPTY_FILTER, activeCount, parseFilter, serializeFilter, toProblemFilter } from '@/features/problems/filter'
 
 function renderAt(path: string) {
   const memoryRouter = createMemoryRouter(router.routes, { initialEntries: [path] })
@@ -40,9 +41,90 @@ describe('문제 목록', () => {
     })
     renderAt('/')
     expect(await screen.findByText('문제 AES의 키 길이는?')).toBeInTheDocument()
-    expect(screen.getByText('보안')).toBeInTheDocument()
+    expect(within(screen.getByRole('list')).getByText('보안')).toBeInTheDocument()
     expect(screen.getAllByText('입력 필요').length).toBeGreaterThanOrEqual(2) // 메뉴 + 카드 배지
-    expect(screen.getByText('#암호화')).toBeInTheDocument()
+    expect(within(screen.getByRole('list')).getByText('#암호화')).toBeInTheDocument()
+  })
+})
+
+describe('문제 목록 필터', () => {
+  const seed = async () => {
+    await createProblem({
+      certification: '정보처리기사',
+      category: 'security',
+      answerType: 'short',
+      question: 'AES의 키 길이는?',
+      myAnswer: '',
+      correctAnswer: '128/192/256',
+      explanation: '',
+      wrongReason: '',
+      status: 'draft',
+      tags: ['암호화'],
+    })
+    await createProblem({
+      certification: '정보처리기사',
+      category: 'network',
+      answerType: 'short',
+      question: '서브넷 마스크 /26의 호스트 수는?',
+      myAnswer: '',
+      correctAnswer: '62',
+      explanation: '풀이',
+      wrongReason: '이유',
+      status: 'done',
+      tags: ['서브넷'],
+    })
+  }
+
+  test('유형을 고르면 해당 문제만 남고 URL에 반영된다', async () => {
+    await seed()
+    const user = userEvent.setup()
+    const memoryRouter = renderAt('/')
+    expect(await screen.findByText('AES의 키 길이는?')).toBeInTheDocument()
+    expect(screen.getByText('서브넷 마스크 /26의 호스트 수는?')).toBeInTheDocument()
+    await user.selectOptions(screen.getByLabelText('문제 유형'), 'network')
+    await waitFor(() => expect(screen.queryByText('AES의 키 길이는?')).not.toBeInTheDocument())
+    expect(screen.getByText('서브넷 마스크 /26의 호스트 수는?')).toBeInTheDocument()
+    expect(memoryRouter.state.location.search).toBe('?category=network')
+    expect(screen.getByText((_, el) => el?.tagName === 'P' && el.textContent === '2개 중 1개')).toBeInTheDocument()
+  })
+
+  test('검색어·태그·초기화', async () => {
+    await seed()
+    const user = userEvent.setup()
+    renderAt('/')
+    await screen.findByText('AES의 키 길이는?')
+    await user.type(screen.getByLabelText('검색'), '62')
+    await waitFor(() => expect(screen.queryByText('AES의 키 길이는?')).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: /암호화/ }))
+    expect(await screen.findByText('조건에 맞는 문제가 없어요')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: /^초기화/ }))
+    expect(await screen.findByText('AES의 키 길이는?')).toBeInTheDocument()
+    expect(screen.getByText('서브넷 마스크 /26의 호스트 수는?')).toBeInTheDocument()
+  })
+
+  test('URL 쿼리로 처음부터 필터된 상태로 연다', async () => {
+    await seed()
+    renderAt('/?status=draft&tag=%EC%95%94%ED%98%B8%ED%99%94')
+    expect(await screen.findByText('AES의 키 길이는?')).toBeInTheDocument()
+    expect(screen.queryByText('서브넷 마스크 /26의 호스트 수는?')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /암호화/ })).toHaveAttribute('aria-pressed', 'true')
+  })
+})
+
+describe('필터 직렬화', () => {
+  test('기본값은 URL에서 생략되고 왕복이 맞는다', () => {
+    expect(serializeFilter(EMPTY_FILTER).toString()).toBe('')
+    const f = { ...EMPTY_FILTER, q: ' aes ', category: 'security', tags: ['a', 'b'], sort: 'wrongCountDesc' as const }
+    const params = serializeFilter(f)
+    expect(params.toString()).toBe('q=aes&category=security&tag=a&tag=b&sort=wrongCountDesc')
+    expect(parseFilter(params)).toEqual({ ...f, q: 'aes' })
+    expect(activeCount(parseFilter(params))).toBe(4)
+  })
+
+  test('모르는 값은 기본값으로 떨어진다', () => {
+    const f = parseFilter(new URLSearchParams('status=zzz&result=zzz&sort=zzz'))
+    expect(f).toEqual(EMPTY_FILTER)
+    expect(toProblemFilter(f)).toEqual({ sort: 'createdDesc' })
   })
 })
 

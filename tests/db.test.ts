@@ -130,6 +130,29 @@ describe('조회·필터', () => {
     expect(r[0].id).toBe(b.id)
   })
 
+  test('최근 복습 결과 필터', async () => {
+    const [a, b] = await queryProblems({ sort: 'createdDesc' }).then((r) => r.reverse())
+    const first = await addAttempt(b.id, { answer: '', result: 'wrong' })
+    const second = await addAttempt(b.id, { answer: '', result: 'correct' })
+    await db.attempts.update(first.id, { attemptedAt: 1000 })
+    await db.attempts.update(second.id, { attemptedAt: 2000 })
+    expect((await queryProblems({ result: 'correct' })).map((p) => p.id)).toEqual([b.id])
+    expect((await queryProblems({ result: 'wrong' })).length).toBe(0)
+    const none = await queryProblems({ result: 'none' })
+    expect(none.length).toBe(2)
+    expect(none.map((p) => p.id)).toContain(a.id)
+  })
+
+  test('최근 복습 순 정렬 — 안 풀어본 문제는 뒤로', async () => {
+    const [a, b, c] = await queryProblems({ sort: 'createdDesc' }).then((r) => r.reverse())
+    const ra = await addAttempt(a.id, { answer: '', result: 'wrong' })
+    const rc = await addAttempt(c.id, { answer: '', result: 'wrong' })
+    await db.attempts.update(ra.id, { attemptedAt: 5000 })
+    await db.attempts.update(rc.id, { attemptedAt: 1000 })
+    const r = await queryProblems({ sort: 'reviewedDesc' })
+    expect(r.map((p) => p.id)).toEqual([a.id, c.id, b.id])
+  })
+
   test('태그 목록과 사용 횟수', async () => {
     const tags = await listTags()
     expect(tags[0]).toEqual({ tag: '암호화', count: 2 })
