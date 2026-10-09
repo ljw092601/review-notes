@@ -4,8 +4,11 @@
 @import './tokens.css';
 
 html {
-  color-scheme: light dark;
+  color-scheme: light;
   overflow-x: clip;
+}
+html[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 body {
@@ -20,10 +23,8 @@ body {
   overflow-wrap: anywhere;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    font-weight: 380;
-  }
+html[data-theme='dark'] body {
+  font-weight: 380;
 }
 
 :focus {

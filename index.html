@@ -5,6 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>오답노트</title>
+    <script>
+      // 첫 그리기 전에 테마를 확정한다 (src/lib/theme.ts와 같은 규칙)
+      (function () {
+        var p = null
+        try { p = localStorage.getItem('reviewnotes.theme') } catch (e) {}
+        var dark = p === 'dark' || (p !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

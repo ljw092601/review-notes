@@ -1,6 +1,7 @@
 import { useCallback, useReducer, useState } from 'react'
 import { useToast } from '@/components/toast-context'
 import { addAttempt } from '@/db'
+import { usePageTitle } from '@/lib/usePageTitle'
 import type { Attempt, AttemptResult, Problem } from '@/models/types'
 import { QuizSession } from './QuizSession'
 import { QuizSetup } from './QuizSetup'
@@ -30,6 +31,7 @@ function Runner({ problems, onReset }: { problems: Problem[]; onReset: () => voi
 }
 
 export function QuizPage() {
+  usePageTitle('복습')
   const [setup, setSetup] = useState<Setup>(DEFAULT_SETUP)
   const [problems, setProblems] = useState<Problem[]>()
   const [run, setRun] = useState(0)

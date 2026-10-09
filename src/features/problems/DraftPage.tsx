@@ -10,6 +10,7 @@ import { Badge, Button, Card, Chip, EmptyState, SectionTitle } from '@/component
 import { db, updateProblem, useCategories, useImages } from '@/db'
 import { ANSWER_TYPE_LABEL } from '@/lib/labels'
 import { useObjectUrl } from '@/lib/useObjectUrl'
+import { usePageTitle } from '@/lib/usePageTitle'
 import type { Category, ImageRecord, Problem } from '@/models/types'
 import { deriveStatus } from './form'
 import { MarkdownField } from './MarkdownField'
@@ -210,6 +211,7 @@ function DraftEditor({
 }
 
 export function DraftPage() {
+  usePageTitle('입력 필요')
   const navigate = useNavigate()
   const [params] = useSearchParams()
   const startId = params.get('id')

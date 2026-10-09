@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useMemo } from 'react'
+import { usePageTitle } from '@/lib/usePageTitle'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, useCategories, useLatestAttempts, useProblems, useTags } from '@/db'
@@ -10,6 +11,7 @@ import { activeCount, toProblemFilter } from './filter'
 import { useListFilter } from './useListFilter'
 
 export function ProblemListPage() {
+  usePageTitle('문제')
   const navigate = useNavigate()
   const { filter, update, toggleTag, reset } = useListFilter()
   const query = useMemo(() => toProblemFilter(filter), [filter])

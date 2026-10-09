@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { usePageTitle } from '@/lib/usePageTitle'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { GalleryImage } from '@/components/ImageGallery'
 import { useToast } from '@/components/toast-context'
@@ -86,6 +87,7 @@ function ProblemEditor({
 
 export function ProblemEditPage() {
   const { id } = useParams()
+  usePageTitle(id ? '편집' : '새 문제')
   const navigate = useNavigate()
   const problem = useProblem(id)
   const existingImages = useImages(id)

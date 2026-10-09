@@ -1,20 +1,53 @@
-import { Plus } from 'lucide-react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Keyboard, Plus } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { NavLink, Outlet, matchPath, useLocation, useNavigate } from 'react-router-dom'
 import { useDraftCount } from '@/db'
+import { cx } from '@/lib/cx'
+import { useShortcuts, type Shortcut } from '@/lib/useShortcuts'
+import { ShortcutHelp } from './ShortcutHelp'
+import { ThemeToggle } from './ThemeToggle'
 import { ToastProvider } from './toast'
 import { Button } from './ui'
-import { cx } from '@/lib/cx'
 
 const nav = [
-  { to: '/', label: '문제' },
-  { to: '/drafts', label: '입력 필요' },
-  { to: '/quiz', label: '복습' },
-  { to: '/transfer', label: '가져오기' },
+  { to: '/', label: '문제', key: 'l' },
+  { to: '/drafts', label: '입력 필요', key: 'i' },
+  { to: '/quiz', label: '복습', key: 'r' },
+  { to: '/transfer', label: '가져오기', key: 't' },
 ]
 
 export function Layout() {
   const navigate = useNavigate()
+  const location = useLocation()
   const draftCount = useDraftCount()
+  const [helpOpen, setHelpOpen] = useState(false)
+
+  const shortcuts = useMemo<Shortcut[]>(
+    () => [
+      { key: '?', label: '도움말', run: () => setHelpOpen((o) => !o) },
+      { key: 'Escape', label: '닫기', inInputs: true, run: () => setHelpOpen(false) },
+      { key: 'n', label: '새 문제', run: () => navigate('/problems/new') },
+      ...nav.map<Shortcut>((item) => ({ key: item.key, label: item.label, run: () => navigate(item.to) })),
+      {
+        key: '/',
+        label: '검색',
+        run: () => {
+          if (location.pathname !== '/') navigate('/', { state: { focusSearch: true } })
+          else window.dispatchEvent(new CustomEvent('reviewnotes:focus-search'))
+        },
+      },
+      {
+        key: 'e',
+        label: '편집',
+        run: () => {
+          const m = matchPath('/problems/:id', location.pathname)
+          if (m?.params.id && m.params.id !== 'new') navigate(`/problems/${m.params.id}/edit`)
+        },
+      },
+    ],
+    [navigate, location.pathname],
+  )
+  useShortcuts(shortcuts)
 
   return (
     <ToastProvider>
@@ -46,15 +79,28 @@ export function Layout() {
                 </NavLink>
               ))}
             </nav>
-            <Button variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} onClick={() => navigate('/problems/new')}>
-              <span className="hidden sm:inline">새 문제</span>
-              <span className="sr-only sm:hidden">새 문제</span>
-            </Button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setHelpOpen(true)}
+                aria-label="키보드 단축키"
+                title="키보드 단축키 (?)"
+                className="hidden size-9 items-center justify-center rounded-control text-ink-2 transition-[background-color,color] duration-(--dur-micro) hover:bg-paper-2 hover:text-ink sm:flex"
+              >
+                <Keyboard className="size-[18px]" aria-hidden />
+              </button>
+              <ThemeToggle />
+              <Button variant="primary" size="sm" icon={<Plus className="size-4" aria-hidden />} onClick={() => navigate('/problems/new')} className="ml-1">
+                <span className="hidden sm:inline">새 문제</span>
+                <span className="sr-only sm:hidden">새 문제</span>
+              </Button>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
           <Outlet />
         </main>
+        <ShortcutHelp open={helpOpen} onClose={() => setHelpOpen(false)} />
       </div>
     </ToastProvider>
   )

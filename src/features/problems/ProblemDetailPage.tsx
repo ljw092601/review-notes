@@ -9,7 +9,8 @@ import { useToast } from '@/components/toast-context'
 import { Badge, Button, Card, Chip, EmptyState, SectionTitle } from '@/components/ui'
 import { cx } from '@/lib/cx'
 import { deleteProblemWithSnapshot, restoreProblem, useAttempts, useCategories, useImages, useProblem } from '@/db'
-import { formatDate, formatDateTime } from '@/lib/text'
+import { excerpt, formatDate, formatDateTime } from '@/lib/text'
+import { usePageTitle } from '@/lib/usePageTitle'
 
 function Section({ title, children, muted, className }: { title: string; children: ReactNode; muted?: boolean; className?: string }) {
   return (
@@ -34,6 +35,7 @@ export function ProblemDetailPage() {
   const categories = useCategories()
   const category = useMemo(() => categories?.find((c) => c.id === problem?.category), [categories, problem])
   const [deleting, setDeleting] = useState(false)
+  usePageTitle(problem ? excerpt(problem.question, 40) : problem === null ? '문제 없음' : undefined)
 
   if (problem === undefined) return null
   if (problem === null) {

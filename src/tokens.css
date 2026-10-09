@@ -48,32 +48,31 @@
   --dur-long: 420ms;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-paper: oklch(15% 0.011 60);
-    --color-paper-2: oklch(18.5% 0.012 60);
-    --color-paper-3: oklch(22% 0.012 60);
-    --color-rule: oklch(28% 0.012 60);
-    --color-rule-2: oklch(38% 0.012 60);
-    --color-neutral: oklch(62% 0.01 65);
-    --color-muted: oklch(72% 0.01 65);
-    --color-ink: oklch(93% 0.008 75);
-    --color-ink-2: oklch(84% 0.008 75);
+/* 어두운 테마. <html data-theme>는 index.html 인라인 스크립트와 src/lib/theme.ts가 light/dark로 확정해 둔다 */
+:root[data-theme='dark'] {
+  --color-paper: oklch(15% 0.011 60);
+  --color-paper-2: oklch(18.5% 0.012 60);
+  --color-paper-3: oklch(22% 0.012 60);
+  --color-rule: oklch(28% 0.012 60);
+  --color-rule-2: oklch(38% 0.012 60);
+  --color-neutral: oklch(62% 0.01 65);
+  --color-muted: oklch(72% 0.01 65);
+  --color-ink: oklch(93% 0.008 75);
+  --color-ink-2: oklch(84% 0.008 75);
 
-    --color-accent: oklch(72% 0.12 35);
-    --color-accent-ink: oklch(18% 0.03 35);
-    --color-accent-soft: oklch(26% 0.045 35);
-    --color-accent-deep: oklch(78% 0.11 35);
-    --color-focus: oklch(74% 0.14 35);
+  --color-accent: oklch(72% 0.12 35);
+  --color-accent-ink: oklch(18% 0.03 35);
+  --color-accent-soft: oklch(26% 0.045 35);
+  --color-accent-deep: oklch(78% 0.11 35);
+  --color-focus: oklch(74% 0.14 35);
 
-    --color-success: oklch(72% 0.11 150);
-    --color-success-soft: oklch(25% 0.04 150);
-    --color-warn: oklch(78% 0.12 85);
-    --color-warn-soft: oklch(27% 0.05 85);
-    --color-error: oklch(72% 0.15 25);
-    --color-error-soft: oklch(26% 0.05 25);
+  --color-success: oklch(72% 0.11 150);
+  --color-success-soft: oklch(25% 0.04 150);
+  --color-warn: oklch(78% 0.12 85);
+  --color-warn-soft: oklch(27% 0.05 85);
+  --color-error: oklch(72% 0.15 25);
+  --color-error-soft: oklch(26% 0.05 25);
 
-    --shadow-card: 0 1px 2px oklch(5% 0.01 60 / 0.5), 0 8px 24px -14px oklch(5% 0.02 60 / 0.8);
-    --shadow-lift: 0 2px 4px oklch(5% 0.01 60 / 0.5), 0 14px 32px -14px oklch(5% 0.02 60 / 0.9);
-  }
+  --shadow-card: 0 1px 2px oklch(5% 0.01 60 / 0.5), 0 8px 24px -14px oklch(5% 0.02 60 / 0.8);
+  --shadow-lift: 0 2px 4px oklch(5% 0.01 60 / 0.5), 0 14px 32px -14px oklch(5% 0.02 60 / 0.9);
 }

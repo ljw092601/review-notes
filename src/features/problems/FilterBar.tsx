@@ -1,5 +1,6 @@
 import { Search, SlidersHorizontal, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Button, Segmented, Select } from '@/components/ui'
 import { cx } from '@/lib/cx'
 import type { Category } from '@/models/types'
@@ -25,6 +26,8 @@ export function FilterBar({
 }) {
   const searchId = useId()
   const searchRef = useRef<HTMLInputElement>(null)
+  const location = useLocation()
+  const focusOnMount = (location.state as { focusSearch?: boolean } | null)?.focusSearch === true
   const [text, setText] = useState(filter.q)
   const [showAllTags, setShowAllTags] = useState(false)
   const active = activeCount(filter)
@@ -36,18 +39,13 @@ export function FilterBar({
     return () => clearTimeout(t)
   }, [text, filter.q, onChange])
 
-  // "/" 로 검색창 포커스
+  // "/" 단축키(Layout)가 보내는 이벤트와, 다른 화면에서 "/"로 넘어온 경우
   useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return
-      const el = document.activeElement
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement) return
-      e.preventDefault()
-      searchRef.current?.focus()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+    const focus = () => searchRef.current?.focus()
+    if (focusOnMount) focus()
+    window.addEventListener('reviewnotes:focus-search', focus)
+    return () => window.removeEventListener('reviewnotes:focus-search', focus)
+  }, [focusOnMount])
 
   function reset() {
     setText('')
