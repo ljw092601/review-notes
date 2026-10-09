@@ -23,7 +23,7 @@ npm run test       # vitest run
 - `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer
 - `src/components/` 공용 UI
 - `inbox/` 문제 사진 입력 (gitignore). `inbox/out/`에 Claude가 가져오기 JSON 작성
-- `.claude/skills/import-problems/` 사진 → 가져오기 JSON 변환 스킬
+- `.claude/skills/import-problems/` 사진 → 가져오기 JSON 변환 스킬. `SKILL.md`(규칙·분류표) + `build.mjs`(중간 파일에 이미지 base64 합치기). 사용자가 "오답 정리해줘"라고 하면 이 스킬을 따른다
 - import 경로 별칭 `@/` = `src/`
 
 ## 작업 규칙

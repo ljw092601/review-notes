@@ -1,70 +1,13 @@
-import { Eye, PencilLine } from 'lucide-react'
-import { useId, useMemo, useState, type ReactNode } from 'react'
+import { useId, useMemo, type ReactNode } from 'react'
 import { ANSWER_TYPE_LABEL } from '@/lib/labels'
 import type { GalleryImage } from '@/components/ImageGallery'
-import { Markdown } from '@/components/Markdown'
 import { Button, Card, Field, Input, SectionTitle, Segmented, Select, Textarea } from '@/components/ui'
 import { cx } from '@/lib/cx'
 import type { Category } from '@/models/types'
 import { ImageAttach } from './ImageAttach'
+import { MarkdownField } from './MarkdownField'
 import { TagInput } from './TagInput'
 import { deriveStatus, type FieldErrors, type FormValues } from './form'
-
-function MarkdownField({
-  id,
-  label,
-  value,
-  onChange,
-  placeholder,
-  rows,
-  required,
-  error,
-  helper,
-}: {
-  id: string
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  rows?: number
-  required?: boolean
-  error?: string
-  helper?: string
-}) {
-  const [preview, setPreview] = useState(false)
-  return (
-    <Field label={label} htmlFor={id} required={required} error={error} helper={helper}>
-      <div className="relative">
-        {preview ? (
-          <div className="min-h-28 rounded-control border border-rule bg-paper-2 px-3.5 py-2.5">
-            {value.trim() ? <Markdown>{value}</Markdown> : <p className="text-sm text-neutral">미리볼 내용이 없어요</p>}
-          </div>
-        ) : (
-          <Textarea
-            id={id}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            rows={rows}
-            aria-invalid={error ? true : undefined}
-            aria-required={required || undefined}
-            className="pr-12"
-          />
-        )}
-        <button
-          type="button"
-          onClick={() => setPreview((p) => !p)}
-          aria-pressed={preview}
-          aria-label={preview ? '편집으로 돌아가기' : '마크다운 미리보기'}
-          title={preview ? '편집' : '미리보기'}
-          className="absolute top-2 right-2 flex size-8 items-center justify-center rounded-[6px] text-neutral hover:bg-paper-3 hover:text-ink"
-        >
-          {preview ? <PencilLine className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-        </button>
-      </div>
-    </Field>
-  )
-}
 
 function Group({ title, children }: { title: string; children: ReactNode }) {
   return (

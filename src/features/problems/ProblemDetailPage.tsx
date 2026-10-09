@@ -1,4 +1,4 @@
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ListTodo, Pencil, Trash2 } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CategoryBadge, ResultBadge, StatusBadge } from '@/components/badges'
@@ -66,6 +66,12 @@ export function ProblemDetailPage() {
           목록
         </Link>
         <div className="flex gap-2">
+          {problem.status === 'draft' && (
+            <Button size="sm" variant="ghost" icon={<ListTodo className="size-4" aria-hidden />} onClick={() => navigate(`/drafts?id=${problem.id}`)}>
+              <span className="hidden sm:inline">입력 필요 화면에서 채우기</span>
+              <span className="sm:hidden">채우기</span>
+            </Button>
+          )}
           <Button size="sm" icon={<Pencil className="size-4" aria-hidden />} onClick={() => navigate(`/problems/${problem.id}/edit`)}>
             편집
           </Button>
