@@ -119,7 +119,7 @@ export function ProblemForm({
 
       <Group title="답">
         <div className="grid gap-x-4 sm:grid-cols-2">
-          <MarkdownField id={id('my')} label="내 답" value={values.myAnswer} onChange={set('myAnswer')} rows={3} placeholder="시험에서 썼던 답" />
+          <MarkdownField id={id('my')} label="내 답" value={values.myAnswer} onChange={set('myAnswer')} rows={1} placeholder="시험에서 썼던 답" />
           <MarkdownField id={id('correct')} label="정답" value={values.correctAnswer} onChange={set('correctAnswer')} rows={3} placeholder="정답" error={errors.correctAnswer} />
         </div>
       </Group>

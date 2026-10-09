@@ -133,6 +133,22 @@ kbd {
   border-top: 1px solid var(--color-rule);
 }
 
+/* 문제 유형 색. --cat-h(각도)·--cat-c(0이면 무채색)는 src/lib/categoryColor.ts가 인라인 변수로 넘긴다 */
+.cat-badge {
+  background: oklch(92% calc(0.05 * var(--cat-c, 1)) var(--cat-h, 60));
+  color: oklch(40% calc(0.13 * var(--cat-c, 1)) var(--cat-h, 60));
+}
+.cat-stripe {
+  border-left: 4px solid oklch(68% calc(0.14 * var(--cat-c, 1)) var(--cat-h, 60));
+}
+html[data-theme='dark'] .cat-badge {
+  background: oklch(27% calc(0.055 * var(--cat-c, 1)) var(--cat-h, 60));
+  color: oklch(82% calc(0.1 * var(--cat-c, 1)) var(--cat-h, 60));
+}
+html[data-theme='dark'] .cat-stripe {
+  border-left-color: oklch(62% calc(0.13 * var(--cat-c, 1)) var(--cat-h, 60));
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

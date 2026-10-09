@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react'
 import {
   forwardRef,
   type ButtonHTMLAttributes,
+  type CSSProperties,
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
@@ -173,9 +174,20 @@ const badgeTone: Record<BadgeTone, string> = {
   error: 'bg-error-soft text-error',
 }
 
-export function Badge({ tone = 'neutral', children, className }: { tone?: BadgeTone; children: ReactNode; className?: string }) {
+export function Badge({
+  tone = 'neutral',
+  children,
+  className,
+  style,
+}: {
+  tone?: BadgeTone
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+}) {
   return (
     <span
+      style={style}
       className={cx('inline-flex items-center gap-1 rounded-pill px-2 py-0.5 text-xs font-medium whitespace-nowrap', badgeTone[tone], className)}
     >
       {children}

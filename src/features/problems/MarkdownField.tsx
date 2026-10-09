@@ -2,6 +2,7 @@ import { Eye, PencilLine } from 'lucide-react'
 import { useState } from 'react'
 import { Markdown } from '@/components/Markdown'
 import { Field, Textarea } from '@/components/ui'
+import { cx } from '@/lib/cx'
 
 /** 마크다운 입력란. 오른쪽 위 눈 아이콘으로 미리보기와 편집을 오간다. */
 export function MarkdownField({
@@ -28,11 +29,12 @@ export function MarkdownField({
   autoFocus?: boolean
 }) {
   const [preview, setPreview] = useState(false)
+  const oneLine = rows === 1
   return (
     <Field label={label} htmlFor={id} required={required} error={error} helper={helper}>
       <div className="relative">
         {preview ? (
-          <div className="min-h-28 rounded-control border border-rule bg-paper-2 px-3.5 py-2.5">
+          <div className={cx('rounded-control border border-rule bg-paper-2 px-3.5 py-2.5', oneLine ? 'min-h-11' : 'min-h-28')}>
             {value.trim() ? <Markdown>{value}</Markdown> : <p className="text-sm text-neutral">미리볼 내용이 없어요</p>}
           </div>
         ) : (
@@ -45,7 +47,7 @@ export function MarkdownField({
             autoFocus={autoFocus}
             aria-invalid={error ? true : undefined}
             aria-required={required || undefined}
-            className="pr-12"
+            className={cx('pr-12', oneLine && 'min-h-11! resize-none')}
           />
         )}
         <button

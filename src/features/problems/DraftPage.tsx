@@ -156,7 +156,7 @@ function DraftEditor({
           </div>
           {editMy ? (
             <div className="mt-2.5">
-              <MarkdownField id={id('my')} label="내 답" value={myAnswer} onChange={setMyAnswer} rows={2} placeholder="시험에서 썼던 답" />
+              <MarkdownField id={id('my')} label="내 답" value={myAnswer} onChange={setMyAnswer} rows={1} placeholder="시험에서 썼던 답" />
             </div>
           ) : (
             <Markdown className="mt-2.5 text-error">{myAnswer}</Markdown>
