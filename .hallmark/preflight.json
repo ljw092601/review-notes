@@ -1,0 +1,10 @@
+{
+  "scannedAt": "2026-10-09",
+  "fontStack": "Pretendard system stack (src/index.css @theme --font-sans), no webfont",
+  "palette": "none (Tailwind default neutral)",
+  "motion": "motion-cut (no motion library)",
+  "spacing": "Tailwind default 4pt",
+  "framework": "Vite + React 19 + Tailwind v4 (@tailwindcss/vite)",
+  "preserve": ["font stack", "Tailwind v4 @theme in src/index.css"],
+  "introduce": ["color/space tokens", "8-state interaction discipline", "slop-test gates"]
+}

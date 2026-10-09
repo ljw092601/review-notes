@@ -1,0 +1,79 @@
+/* Hallmark · component-scope app UI · genre: playful (soft) · theme: Coral · anchor hue: 35 (coral) · tone: soft
+ * Hallmark · pre-emit critique: P4 H4 E4 S4 R5 V4
+ * states: default · hover · focus · active · disabled · loading · error · success
+ */
+
+@theme {
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+
+  /* 종이 · 잉크 (라이트) */
+  --color-paper: oklch(97.5% 0.009 75);
+  --color-paper-2: oklch(94.5% 0.011 75);
+  --color-paper-3: oklch(91% 0.012 75);
+  --color-rule: oklch(88% 0.012 75);
+  --color-rule-2: oklch(80% 0.012 75);
+  --color-neutral: oklch(58% 0.012 65);
+  --color-muted: oklch(44% 0.012 60);
+  --color-ink: oklch(23% 0.014 55);
+  --color-ink-2: oklch(34% 0.014 55);
+
+  /* 악센트 · 코랄 */
+  --color-accent: oklch(60% 0.14 35);
+  --color-accent-ink: oklch(98% 0.01 60);
+  --color-accent-soft: oklch(93% 0.035 40);
+  --color-accent-deep: oklch(50% 0.15 32);
+  --color-focus: oklch(56% 0.16 35);
+
+  /* 의미색 */
+  --color-success: oklch(55% 0.12 150);
+  --color-success-soft: oklch(93% 0.04 150);
+  --color-warn: oklch(62% 0.13 80);
+  --color-warn-soft: oklch(94% 0.05 85);
+  --color-error: oklch(56% 0.18 25);
+  --color-error-soft: oklch(94% 0.04 25);
+
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px oklch(30% 0.02 55 / 0.06), 0 8px 24px -14px oklch(50% 0.08 35 / 0.35);
+  --shadow-lift: 0 2px 4px oklch(30% 0.02 55 / 0.06), 0 14px 32px -14px oklch(50% 0.1 35 / 0.4);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(15% 0.011 60);
+    --color-paper-2: oklch(18.5% 0.012 60);
+    --color-paper-3: oklch(22% 0.012 60);
+    --color-rule: oklch(28% 0.012 60);
+    --color-rule-2: oklch(38% 0.012 60);
+    --color-neutral: oklch(62% 0.01 65);
+    --color-muted: oklch(72% 0.01 65);
+    --color-ink: oklch(93% 0.008 75);
+    --color-ink-2: oklch(84% 0.008 75);
+
+    --color-accent: oklch(72% 0.12 35);
+    --color-accent-ink: oklch(18% 0.03 35);
+    --color-accent-soft: oklch(26% 0.045 35);
+    --color-accent-deep: oklch(78% 0.11 35);
+    --color-focus: oklch(74% 0.14 35);
+
+    --color-success: oklch(72% 0.11 150);
+    --color-success-soft: oklch(25% 0.04 150);
+    --color-warn: oklch(78% 0.12 85);
+    --color-warn-soft: oklch(27% 0.05 85);
+    --color-error: oklch(72% 0.15 25);
+    --color-error-soft: oklch(26% 0.05 25);
+
+    --shadow-card: 0 1px 2px oklch(5% 0.01 60 / 0.5), 0 8px 24px -14px oklch(5% 0.02 60 / 0.8);
+    --shadow-lift: 0 2px 4px oklch(5% 0.01 60 / 0.5), 0 14px 32px -14px oklch(5% 0.02 60 / 0.9);
+  }
+}
