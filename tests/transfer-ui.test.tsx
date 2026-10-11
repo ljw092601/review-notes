@@ -86,8 +86,42 @@ describe('가져오기', () => {
     await user.upload(await screen.findByLabelText('가져올 JSON 파일'), jsonFile(claudeFile()))
     expect(await screen.findByText('이미 있음')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '0개 가져오기' })).toBeDisabled()
-    await user.click(screen.getByLabelText('이미 있는 문제도 가져오기'))
+    await user.click(screen.getByRole('radio', { name: /따로 추가/ }))
     expect(screen.getByRole('button', { name: '1개 가져오기' })).toBeEnabled()
+  })
+
+  test('덮어쓰기를 고르면 기존 문제의 풀이·정답이 파일 내용으로 바뀌고 틀린 이유는 남는다', async () => {
+    const existing = await createProblem({
+      certification: '정보처리기사',
+      category: 'design',
+      source: '2024년 2회 기출 3번',
+      answerType: 'short',
+      question: '다른 본문',
+      myAnswer: '',
+      correctAnswer: '옛 정답',
+      explanation: '옛 풀이',
+      wrongReason: '내가 적은 이유',
+      status: 'done',
+      tags: [],
+    })
+    const user = userEvent.setup()
+    const memoryRouter = renderAt('/transfer')
+    await user.upload(
+      await screen.findByLabelText('가져올 JSON 파일'),
+      jsonFile(claudeFile({ explanation: '**핵심 개념**: 새 풀이' })),
+    )
+    await screen.findByText('이미 있음')
+    await user.click(screen.getByRole('radio', { name: /덮어쓰기/ }))
+    expect(within(screen.getByRole('list', { name: '가져올 문제' })).getByText('덮어쓰기')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: '1개 가져오기 (1개 덮어쓰기)' }))
+    await waitFor(() => expect(memoryRouter.state.location.pathname).toBe('/'))
+    const saved = await db.problems.toArray()
+    expect(saved.length).toBe(1)
+    expect(saved[0].id).toBe(existing.id)
+    expect(saved[0].explanation).toBe('**핵심 개념**: 새 풀이')
+    expect(saved[0].correctAnswer).toBe('클래스 다이어그램')
+    expect(saved[0].wrongReason).toBe('내가 적은 이유')
+    expect(saved[0].status).toBe('done')
   })
 
   test('형식이 틀린 파일은 오류 목록을 인라인으로 보여준다', async () => {

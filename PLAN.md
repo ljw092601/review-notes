@@ -53,7 +53,7 @@ interface Problem {
   choices?: string[];         // 객관식일 때만
   myAnswer: string;           // 내가 썼던 답. 사진에 보이면 Claude가 추출, 아니면 사용자 입력
   correctAnswer: string;      // 정답. Claude가 채움
-  explanation: string;        // 풀이 (마크다운). 사용자 입력
+  explanation: string;        // 풀이 (마크다운). Claude가 초안을 채우고 사용자가 다듬음
   wrongReason: string;        // 왜 틀렸는지 (마크다운). 사용자 입력
   status: 'draft' | 'done';   // draft = 틀린 이유/풀이 미입력
   tags: string[];
@@ -150,8 +150,9 @@ inbox/                 ← 사진을 여기에 넣는다
   2026-10-09/
     IMG_001.jpg
     IMG_002.jpg
-inbox/out/
-  2026-10-09.json      ← Claude가 만든 가져오기 파일
+    2026-10-09.problems.json  ← Claude가 쓴 중간 파일
+    2026-10-09.json           ← 빌드 결과, 앱에 드롭하는 파일
+    done/                     ← 처리한 사진
 ```
 
 역할 분담:
@@ -167,7 +168,7 @@ inbox/out/
 
 1. 사용자가 문제 사진을 `inbox/<날짜>/`에 넣고 Claude에게 "오답 정리해줘"라고 요청한다. 그 외 설명은 필요 없다.
 2. Claude가 이미지를 읽어 위 표의 Claude 담당 항목을 모두 채운다. 사용자에게 되묻지 않는 것이 원칙이고, 사진이 흐려서 읽을 수 없는 부분만 `[판독불가]`로 표시한다.
-3. Claude가 `inbox/out/<날짜>.json`을 앱 가져오기 스키마에 맞춰 작성한다. 원본 사진은 base64로 포함한다. 처리한 사진은 `inbox/<날짜>/done/`으로 옮긴다.
+3. Claude가 `inbox/<날짜>/<날짜>.json`을 앱 가져오기 스키마에 맞춰 작성한다. 원본 사진은 base64로 포함한다. 처리한 사진은 `inbox/<날짜>/done/`으로 옮긴다.
 4. 사용자가 앱의 "가져오기"에 파일을 드롭하면 문제가 `draft` 상태로 등록되고, 바로 draft 입력 화면으로 이어진다. 사용자는 틀린 이유와 풀이만 적는다.
 
 이 흐름은 리포 안의 스킬 `.claude/skills/import-problems/SKILL.md`로 고정한다. 스킬에는 가져오기 JSON 스키마, 분류표와 분류 기준, 정답을 직접 풀 때의 주의점(확신 없으면 `answerConfidence: "low"`), 출력 경로 규칙을 적어 둔다.
@@ -195,10 +196,10 @@ inbox/out/
 }
 ```
 
-- `explanation`, `wrongReason`은 가져오기 파일에 없다. 앱이 빈 값 + `status: "draft"`로 저장한다.
+- `wrongReason`은 가져오기 파일에 없다(사용자만 앎). `explanation`은 Claude가 핵심 개념을 한두 문장 + 비교표·목록으로 정리해 채워 보낸다. 풀이 흐름·자주 틀리는 점은 넣지 않는다. 앱은 `status: "draft"`로 저장한다.
 - `answerConfidence`가 `low`인 문제는 draft 입력 화면에서 정답 칸을 강조해 사용자가 확인하도록 한다.
 
-향후 개선 후보: File System Access API로 앱이 `inbox/out/` 폴더를 직접 감시해서 수동 드롭 없이 자동 반영. 브라우저 권한 UX가 번거로워 1차에서는 제외.
+향후 개선 후보: File System Access API로 앱이 `inbox/` 폴더를 직접 감시해서 수동 드롭 없이 자동 반영. 브라우저 권한 UX가 번거로워 1차에서는 제외.
 
 ## 7. 폴더 구조 (예정)
 
@@ -260,9 +261,9 @@ ReviewNotes/
 
 ## 12. 가져오기·입력 필요 화면 결정 (단계 4에서 확정)
 
-- **스킬 흐름은 2단계**: Claude가 `inbox/out/<날짜>.problems.json`(이미지 파일명만)을 쓰고, `node .claude/skills/import-problems/build.mjs inbox/<날짜>`가 base64를 붙여 `<날짜>.json`을 만든다. base64를 Claude가 손으로 쓰지 않게 하려는 것. 스크립트가 스키마를 1차 검증하고 사진을 `done/`으로 옮긴다. 같은 날 재실행하면 `<날짜>-2.json`.
-- 빌드 스크립트는 `explanation`/`wrongReason`/`status`를 제거해 항상 draft로 들어가게 한다.
-- 가져오기 화면: 드롭 즉시 미리보기(유형·출처·요약·이미지 수·"이미 있음"·"정답 확인 필요"). 중복은 기본 건너뛰고 체크박스로 포함 가능. 형식 오류는 카드 안에 인라인. 가져온 것 중 draft가 있으면 바로 `/drafts`로 이동.
+- **스킬 흐름은 2단계**: Claude가 `inbox/<날짜>/<날짜>.problems.json`(이미지 파일명만)을 쓰고, `node .claude/skills/import-problems/build.mjs inbox/<날짜>`가 base64를 붙여 `<날짜>.json`을 만든다. base64를 Claude가 손으로 쓰지 않게 하려는 것. 스크립트가 스키마를 1차 검증하고 사진을 `done/`으로 옮긴다. 같은 날 재실행하면 `<날짜>-2.json`.
+- 빌드 스크립트는 `wrongReason`/`status`를 제거해 항상 draft로 들어가게 한다. `explanation`(Claude가 쓴 개념 사전)은 남긴다(2026-10-11 변경. 2026-10-12에 풀이 흐름·자주 틀리는 점을 빼고 핵심 개념 블록만 두는 것으로 확정).
+- 가져오기 화면: 드롭 즉시 미리보기(유형·출처·요약·이미지 수·"이미 있음"·"정답 확인 필요"). 중복은 기본 건너뛰고, 라디오로 덮어쓰기(기존 id·등록일·틀린 이유·내 답·복습 기록 유지, 나머지와 사진은 파일 쪽으로 교체, 상태는 풀이+틀린 이유로 재계산) 또는 따로 추가 선택 가능(2026-10-12). 형식 오류는 카드 안에 인라인. 가져온 것 중 draft가 있으면 바로 `/drafts`로 이동.
 - 내보내기 파일명 `review-notes-YYYY-MM-DD.json`. 문제 유형 관리(추가·이름/설명 변경·순서·삭제)는 같은 페이지 세 번째 카드.
 - 입력 필요 화면: 큐 = `?id=` 지정 문제 → 나머지 draft(오래된 순) → 이번 세션에서 건너뛴 것. 사진을 크게(최대 높이 32rem) 보여주고, `answerConfidence: low`면 정답 입력란이 처음부터 열린다. 저장은 틀린 이유+풀이 둘 다 있을 때만 `done`, 아니면 토스트 후 draft 유지. Ctrl+Enter 저장.
 - 상세 화면의 draft 문제에는 "입력 필요 화면에서 채우기" 버튼.

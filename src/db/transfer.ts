@@ -18,8 +18,16 @@ export interface ImportPreview {
 export interface ImportResult {
   added: number
   skipped: number
+  /** 덮어쓰기로 갱신한 기존 문제 수 */
+  updated: number
   attemptsAdded: number
 }
+
+/**
+ * 이미 있는 문제를 만났을 때.
+ * skip = 건너뛰기, add = 따로 하나 더 추가, overwrite = 기존 문제를 파일 내용으로 갱신(틀린 이유·복습 기록·등록일은 유지)
+ */
+export type DuplicateMode = 'skip' | 'add' | 'overwrite'
 
 export class ImportFormatError extends Error {
   issues: string[]
@@ -72,10 +80,10 @@ export async function previewImport(json: unknown): Promise<ImportPreview> {
 
 export async function importProblems(
   preview: ImportPreview,
-  options: { skipDuplicates?: boolean } = {},
+  options: { duplicates?: DuplicateMode; skipDuplicates?: boolean } = {},
 ): Promise<ImportResult> {
-  const skipDuplicates = options.skipDuplicates ?? true
-  const result: ImportResult = { added: 0, skipped: 0, attemptsAdded: 0 }
+  const mode: DuplicateMode = options.duplicates ?? (options.skipDuplicates === false ? 'add' : 'skip')
+  const result: ImportResult = { added: 0, skipped: 0, updated: 0, attemptsAdded: 0 }
   const idMap = new Map<string, string>()
 
   await db.transaction('rw', db.problems, db.images, db.attempts, db.categories, async () => {
@@ -85,8 +93,14 @@ export async function importProblems(
     const categoryIds = new Set((await db.categories.toArray()).map((c) => c.id))
 
     for (const { problem, duplicateOf } of preview.items) {
-      if (duplicateOf && skipDuplicates) {
+      if (duplicateOf && mode === 'skip') {
         result.skipped++
+        continue
+      }
+      if (duplicateOf && mode === 'overwrite') {
+        await overwriteProblem(duplicateOf, problem, categoryIds)
+        if (problem.id) idMap.set(problem.id, duplicateOf.id)
+        result.updated++
         continue
       }
       const { images, id: givenId, createdAt, updatedAt, ...input } = problem
@@ -128,6 +142,41 @@ export async function importProblems(
     }
   })
   return result
+}
+
+/**
+ * 기존 문제를 파일의 문제로 덮어쓴다. 문제·정답·풀이·유형·태그·사진은 파일 쪽으로 바꾸고,
+ * 사용자가 앱에서 적은 것(틀린 이유, 내 답)은 파일에 값이 없으면 남긴다. id·등록일·복습 기록은 그대로.
+ */
+async function overwriteProblem(existing: Problem, incoming: ImportProblem, categoryIds: Set<string>): Promise<void> {
+  const now = Date.now()
+  const explanation = incoming.explanation.trim() ? incoming.explanation : existing.explanation
+  const wrongReason = incoming.wrongReason.trim() ? incoming.wrongReason : existing.wrongReason
+  const updated: Problem = {
+    ...existing,
+    certification: incoming.certification,
+    category: categoryIds.has(incoming.category) ? incoming.category : FALLBACK_CATEGORY_ID,
+    source: incoming.source,
+    answerType: incoming.answerType,
+    question: incoming.question,
+    choices: incoming.answerType === 'choice' ? incoming.choices : undefined,
+    myAnswer: incoming.myAnswer.trim() ? incoming.myAnswer : existing.myAnswer,
+    correctAnswer: incoming.correctAnswer,
+    answerConfidence: incoming.answerConfidence,
+    explanation,
+    wrongReason,
+    status: explanation.trim() && wrongReason.trim() ? 'done' : 'draft',
+    tags: incoming.tags,
+    updatedAt: now,
+  }
+  await db.problems.put(updated)
+
+  const images = incoming.images.filter((img) => 'dataUrl' in img)
+  if (images.length === 0) return
+  await db.images.where('problemId').equals(existing.id).delete()
+  for (const image of images) {
+    await db.images.add({ id: newId(), problemId: existing.id, blob: dataUrlToBlob(image.dataUrl), name: image.name, createdAt: now })
+  }
 }
 
 /** 전체 백업. 이미지는 base64로 포함한다. */

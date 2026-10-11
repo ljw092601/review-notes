@@ -175,7 +175,16 @@ function DraftEditor({
               placeholder="개념을 헷갈렸는지, 문제를 잘못 읽었는지"
               autoFocus
             />
-            <MarkdownField id={id('expl')} label="풀이" value={explanation} onChange={setExplanation} rows={6} placeholder="다음에 보면 바로 이해되게" />
+            <MarkdownField
+              id={id('expl')}
+              label="풀이"
+              value={explanation}
+              onChange={setExplanation}
+              rows={6}
+              placeholder="다음에 보면 바로 이해되게"
+              helper={problem.explanation.trim() ? 'Claude가 정리한 개념이에요. 연필을 눌러 고칠 수 있어요' : undefined}
+              defaultPreview={problem.explanation.trim().length > 0}
+            />
             <p className={status === 'done' ? 'text-xs text-success' : 'text-xs text-warn'}>
               {status === 'done' ? '둘 다 적혀 있어서 완료로 저장돼요.' : '풀이와 틀린 이유를 둘 다 적으면 완료로 바뀌어요.'}
             </p>
@@ -243,7 +252,7 @@ export function DraftPage() {
       <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">입력 필요</h1>
-          <p className="mt-1 text-sm text-muted">가져온 문제에 틀린 이유와 풀이만 적으면 돼요.</p>
+          <p className="mt-1 text-sm text-muted">가져온 문제에 틀린 이유를 적고, 미리 정리된 개념을 다듬으면 돼요.</p>
         </div>
         {current && (
           <p className="text-sm text-muted tabular-nums">

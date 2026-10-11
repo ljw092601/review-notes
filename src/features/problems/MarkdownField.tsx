@@ -16,6 +16,7 @@ export function MarkdownField({
   error,
   helper,
   autoFocus,
+  defaultPreview = false,
 }: {
   id: string
   label: string
@@ -27,8 +28,10 @@ export function MarkdownField({
   error?: string
   helper?: string
   autoFocus?: boolean
+  /** 처음에 미리보기로 시작(미리 채워진 내용을 읽기 좋게 보여줄 때) */
+  defaultPreview?: boolean
 }) {
-  const [preview, setPreview] = useState(false)
+  const [preview, setPreview] = useState(defaultPreview)
   const oneLine = rows === 1
   return (
     <Field label={label} htmlFor={id} required={required} error={error} helper={helper}>

@@ -199,7 +199,7 @@ describe('가져오기', () => {
     expect(preview.items[0].duplicateOf).toBeUndefined()
     expect(preview.unknownCategories).toEqual([])
     const result = await importProblems(preview)
-    expect(result).toEqual({ added: 1, skipped: 0, attemptsAdded: 0 })
+    expect(result).toEqual({ added: 1, skipped: 0, updated: 0, attemptsAdded: 0 })
 
     const [p] = await db.problems.toArray()
     expect(p.status).toBe('draft')
@@ -216,6 +216,40 @@ describe('가져오기', () => {
     expect(again.items[0].duplicateOf).toBeDefined()
     expect(await importProblems(again)).toMatchObject({ added: 0, skipped: 1 })
     expect(await importProblems(again, { skipDuplicates: false })).toMatchObject({ added: 1 })
+  })
+
+  test('덮어쓰기는 같은 id를 유지한 채 파일 내용으로 갱신하고, 사용자 입력·복습 기록·등록일은 남긴다', async () => {
+    await importProblems(await previewImport(claudeFile()))
+    const [before] = await db.problems.toArray()
+    await updateProblem(before.id, { wrongReason: '급하게 읽음', myAnswer: '객체 다이어그램', explanation: '내가 쓴 풀이' })
+    await addAttempt(before.id, { answer: 'x', result: 'wrong' })
+    const oldImages = await listImages(before.id)
+
+    const file = claudeFile()
+    file.problems[0].explanation = '**핵심 개념**: 새 풀이'
+    file.problems[0].correctAnswer = '클래스 다이어그램(Class Diagram)'
+    file.problems[0].tags = ['UML', '구조 다이어그램']
+    file.problems[0].images = [{ name: 'new.png', dataUrl: PNG_DATA_URL }]
+    const preview = await previewImport(file)
+    expect(preview.items[0].duplicateOf?.id).toBe(before.id)
+    expect(await importProblems(preview, { duplicates: 'overwrite' })).toEqual({ added: 0, skipped: 0, updated: 1, attemptsAdded: 0 })
+
+    const all = await db.problems.toArray()
+    expect(all.length).toBe(1)
+    const after = all[0]
+    expect(after.id).toBe(before.id)
+    expect(after.createdAt).toBe(before.createdAt)
+    expect(after.explanation).toBe('**핵심 개념**: 새 풀이')
+    expect(after.correctAnswer).toBe('클래스 다이어그램(Class Diagram)')
+    expect(after.tags).toEqual(['UML', '구조 다이어그램'])
+    expect(after.wrongReason).toBe('급하게 읽음')
+    expect(after.myAnswer).toBe('객체 다이어그램')
+    expect(after.status).toBe('done')
+    expect((await listAttempts(before.id)).length).toBe(1)
+    const images = await listImages(before.id)
+    expect(images.length).toBe(1)
+    expect(images[0].name).toBe('new.png')
+    expect(images[0].id).not.toBe(oldImages[0].id)
   })
 
   test('모르는 유형은 기타로 바뀐다', async () => {
@@ -243,7 +277,7 @@ describe('가져오기', () => {
     await db.delete()
     await db.open()
     const result = await importProblems(await previewImport(JSON.parse(JSON.stringify(backup))))
-    expect(result).toEqual({ added: 1, skipped: 0, attemptsAdded: 1 })
+    expect(result).toEqual({ added: 1, skipped: 0, updated: 0, attemptsAdded: 1 })
 
     const [restored] = await db.problems.toArray()
     expect(restored.id).toBe(p.id)

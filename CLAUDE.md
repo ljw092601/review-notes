@@ -25,8 +25,9 @@ npm run test       # vitest run
 - `src/models/` 타입, zod 스키마(가져오기 파일 검증), 문제 유형 시드
 - `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer
 - `src/components/` 공용 UI
-- `inbox/` 문제 사진 입력 (gitignore). `inbox/out/`에 Claude가 가져오기 JSON 작성
+- `inbox/` 문제 사진 입력 (gitignore). 결과 JSON도 같은 날짜 폴더(`inbox/<날짜>/<날짜>.json`)에 둔다
 - `.claude/skills/import-problems/` 사진 → 가져오기 JSON 변환 스킬. `SKILL.md`(규칙·분류표) + `build.mjs`(중간 파일에 이미지 base64 합치기). 사용자가 "오답 정리해줘"라고 하면 이 스킬을 따른다
+- `scripts/` 바탕화면 실행용. `start.ps1`(서버 없으면 켜고 크롬으로 5173 열기), `make-shortcut.ps1`(바탕화면 바로가기 생성), `reviewnotes.ico`(favicon.svg에서 만든 아이콘)
 - import 경로 별칭 `@/` = `src/`
 
 ## 작업 규칙

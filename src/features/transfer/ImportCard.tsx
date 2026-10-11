@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { CategoryBadge } from '@/components/badges'
 import { Badge, Button, Card, SectionTitle } from '@/components/ui'
 import { useToast } from '@/components/toast-context'
-import { ImportFormatError, importProblems, previewImport, useCategories, type ImportPreview } from '@/db'
+import { ImportFormatError, importProblems, previewImport, useCategories, type DuplicateMode, type ImportPreview } from '@/db'
 import { cx } from '@/lib/cx'
 import { excerpt } from '@/lib/text'
 import type { Category } from '@/models/types'
@@ -23,7 +23,7 @@ export function ImportCard() {
   const inputRef = useRef<HTMLInputElement>(null)
   const [state, setState] = useState<State>({ kind: 'idle' })
   const [dragging, setDragging] = useState(false)
-  const [includeDuplicates, setIncludeDuplicates] = useState(false)
+  const [duplicateMode, setDuplicateMode] = useState<DuplicateMode>('skip')
   const [importing, setImporting] = useState(false)
 
   async function accept(files: FileList | File[]) {
@@ -33,7 +33,7 @@ export function ImportCard() {
       return
     }
     setState({ kind: 'reading' })
-    setIncludeDuplicates(false)
+    setDuplicateMode('skip')
     try {
       const text = await readFileText(file)
       let json: unknown
@@ -61,10 +61,13 @@ export function ImportCard() {
     if (state.kind !== 'preview') return
     setImporting(true)
     try {
-      const willAdd = state.preview.items.filter((it) => includeDuplicates || !it.duplicateOf)
+      const willAdd = state.preview.items.filter((it) => duplicateMode === 'add' || !it.duplicateOf)
       const hasDraft = willAdd.some((it) => it.problem.status === 'draft')
-      const result = await importProblems(state.preview, { skipDuplicates: !includeDuplicates })
-      toast.show(result.skipped > 0 ? `${result.added}개 가져왔어요 (${result.skipped}개 건너뜀)` : `${result.added}개 가져왔어요`)
+      const result = await importProblems(state.preview, { duplicates: duplicateMode })
+      const parts = [`${result.added}개 가져왔어요`]
+      if (result.updated > 0) parts.push(`${result.updated}개 덮어씀`)
+      if (result.skipped > 0) parts.push(`${result.skipped}개 건너뜀`)
+      toast.show(parts.join(' · '))
       navigate(result.added > 0 && hasDraft ? '/drafts' : '/')
     } catch (e) {
       toast.show(e instanceof Error ? e.message : '가져오기에 실패했어요', { tone: 'error' })
@@ -80,7 +83,7 @@ export function ImportCard() {
       <SectionTitle>가져오기</SectionTitle>
       <p className="mt-1.5 text-sm text-muted">
         사진을 <code className="rounded-[4px] bg-paper-2 px-1 font-mono text-[0.85em]">inbox/&lt;날짜&gt;/</code>에 넣고 Claude Code에서 “오답 정리해줘”라고 하면{' '}
-        <code className="rounded-[4px] bg-paper-2 px-1 font-mono text-[0.85em]">inbox/out/&lt;날짜&gt;.json</code>이 만들어져요. 그 파일이나 내보내기 백업 파일을 여기에 놓으세요.
+        <code className="rounded-[4px] bg-paper-2 px-1 font-mono text-[0.85em]">inbox/&lt;날짜&gt;/&lt;날짜&gt;.json</code>이 만들어져요. 그 파일이나 내보내기 백업 파일을 여기에 놓으세요.
       </p>
 
       {state.kind !== 'preview' && (
@@ -137,8 +140,8 @@ export function ImportCard() {
           name={state.name}
           preview={state.preview}
           categoryMap={categoryMap}
-          includeDuplicates={includeDuplicates}
-          onIncludeDuplicates={setIncludeDuplicates}
+          duplicateMode={duplicateMode}
+          onDuplicateMode={setDuplicateMode}
           importing={importing}
           onImport={() => void runImport()}
           onReset={() => setState({ kind: 'idle' })}
@@ -148,12 +151,18 @@ export function ImportCard() {
   )
 }
 
+const DUPLICATE_OPTIONS: Array<{ value: DuplicateMode; label: string; hint: string }> = [
+  { value: 'skip', label: '건너뛰기', hint: '앱에 있는 그대로 두고 새 문제만 가져와요' },
+  { value: 'overwrite', label: '덮어쓰기', hint: '문제·정답·풀이·유형·태그·사진을 파일 내용으로 바꿔요. 틀린 이유와 복습 기록은 남아요' },
+  { value: 'add', label: '따로 추가', hint: '같은 문제를 하나 더 만들어요' },
+]
+
 function PreviewPanel({
   name,
   preview,
   categoryMap,
-  includeDuplicates,
-  onIncludeDuplicates,
+  duplicateMode,
+  onDuplicateMode,
   importing,
   onImport,
   onReset,
@@ -161,8 +170,8 @@ function PreviewPanel({
   name: string
   preview: ImportPreview
   categoryMap: Map<string, Category>
-  includeDuplicates: boolean
-  onIncludeDuplicates: (v: boolean) => void
+  duplicateMode: DuplicateMode
+  onDuplicateMode: (v: DuplicateMode) => void
   importing: boolean
   onImport: () => void
   onReset: () => void
@@ -170,7 +179,7 @@ function PreviewPanel({
   const duplicates = preview.items.filter((it) => it.duplicateOf).length
   const attempts = preview.file.attempts?.length ?? 0
   const fileCategories = preview.file.categories?.length ?? 0
-  const toAdd = includeDuplicates ? preview.items.length : preview.items.length - duplicates
+  const toAdd = duplicateMode === 'skip' ? preview.items.length - duplicates : preview.items.length
 
   return (
     <div className="mt-4">
@@ -213,12 +222,12 @@ function PreviewPanel({
       ) : (
         <ul className="mt-3 divide-y divide-rule rounded-control border border-rule" aria-label="가져올 문제">
           {preview.items.map(({ problem, duplicateOf }, i) => {
-            const skipped = duplicateOf && !includeDuplicates
+            const skipped = duplicateOf && duplicateMode === 'skip'
             return (
               <li key={i} className={cx('px-3.5 py-3', skipped && 'opacity-55')}>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <CategoryBadge category={categoryMap.get(problem.category)} id={problem.category} />
-                  {duplicateOf && <Badge tone="warn">이미 있음</Badge>}
+                  {duplicateOf && <Badge tone="warn">{duplicateMode === 'overwrite' ? '덮어쓰기' : '이미 있음'}</Badge>}
                   {problem.answerConfidence === 'low' && <Badge tone="error">정답 확인 필요</Badge>}
                   {problem.source && <span className="text-xs text-neutral">{problem.source}</span>}
                   {problem.images.length > 0 && (
@@ -236,20 +245,32 @@ function PreviewPanel({
       )}
 
       {duplicates > 0 && (
-        <label className="mt-3 flex items-center gap-2 text-sm text-ink-2">
-          <input
-            type="checkbox"
-            checked={includeDuplicates}
-            onChange={(e) => onIncludeDuplicates(e.target.checked)}
-            className="size-4 accent-(--color-accent)"
-          />
-          이미 있는 문제도 가져오기
-        </label>
+        <fieldset className="mt-3 rounded-control border border-rule bg-paper-2/60 px-3.5 py-3">
+          <legend className="px-1 text-sm font-medium text-ink">이미 있는 문제 {duplicates}개는</legend>
+          <div className="mt-1 flex flex-col gap-1.5 text-sm text-ink-2">
+            {DUPLICATE_OPTIONS.map((opt) => (
+              <label key={opt.value} className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  name="duplicate-mode"
+                  value={opt.value}
+                  checked={duplicateMode === opt.value}
+                  onChange={() => onDuplicateMode(opt.value)}
+                  className="mt-0.5 size-4 accent-(--color-accent)"
+                />
+                <span>
+                  {opt.label}
+                  <span className="block text-xs text-neutral">{opt.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button variant="primary" onClick={onImport} loading={importing} disabled={toAdd === 0}>
-          {toAdd}개 가져오기
+          {duplicateMode === 'overwrite' && duplicates > 0 ? `${toAdd}개 가져오기 (${duplicates}개 덮어쓰기)` : `${toAdd}개 가져오기`}
         </Button>
         <Button variant="ghost" onClick={onReset} disabled={importing}>
           다른 파일 고르기

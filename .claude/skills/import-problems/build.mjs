@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 사진 폴더 + inbox/out/<날짜>.problems.json → inbox/out/<날짜>.json (이미지 base64 포함)
+// 사진 폴더(inbox/<날짜>/) 안의 <날짜>.problems.json → 같은 폴더에 <날짜>.json (이미지 base64 포함)
 // 사용: node .claude/skills/import-problems/build.mjs inbox/2026-10-09 [--keep]
 //   --keep : 처리한 사진을 done/ 으로 옮기지 않는다
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
@@ -18,7 +18,7 @@ if (!dir) fail('사용법: node build.mjs inbox/<날짜> [--keep]')
 
 const photoDir = resolve(dir)
 const date = basename(photoDir)
-const outDir = resolve(photoDir, '..', 'out')
+const outDir = photoDir // 결과도 날짜 폴더에 같이 둔다
 const inputPath = join(outDir, `${date}.problems.json`)
 if (!existsSync(inputPath)) fail(`중간 파일이 없습니다: ${inputPath}`)
 
@@ -51,8 +51,8 @@ const problems = raw.problems.map((p, i) => {
     return { name: basename(name), dataUrl: `data:${mime};base64,${readFileSync(path).toString('base64')}` }
   })
 
-  // 사용자 몫인 필드는 제거하고 draft로 들어가게 한다
-  const { imageFiles: _f, explanation: _e, wrongReason: _w, status: _s, ...rest } = p
+  // 틀린 이유는 사용자 몫이라 제거하고, 항상 draft로 들어가게 한다. 풀이(explanation)는 Claude가 미리 채운 것을 그대로 둔다
+  const { imageFiles: _f, wrongReason: _w, status: _s, ...rest } = p
   return {
     certification: '정보처리기사',
     source: '',
