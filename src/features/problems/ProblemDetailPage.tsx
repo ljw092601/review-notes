@@ -1,4 +1,4 @@
-import { ArrowLeft, ListTodo, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ImageIcon, ListTodo, Pencil, Trash2 } from 'lucide-react'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { CategoryBadge, ResultBadge, StatusBadge } from '@/components/badges'
@@ -35,6 +35,7 @@ export function ProblemDetailPage() {
   const categories = useCategories()
   const category = useMemo(() => categories?.find((c) => c.id === problem?.category), [categories, problem])
   const [deleting, setDeleting] = useState(false)
+  const [showImages, setShowImages] = useState(false)
   usePageTitle(problem ? excerpt(problem.question, 40) : problem === null ? '문제 없음' : undefined)
 
   if (problem === undefined) return null
@@ -115,7 +116,23 @@ export function ProblemDetailPage() {
               ))}
             </ol>
           )}
-          {images && images.length > 0 && <ImageGallery className="mt-4" images={images} />}
+          {images && images.length > 0 && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setShowImages((v) => !v)}
+                aria-expanded={showImages}
+                className="inline-flex h-8 items-center gap-1.5 rounded-control px-2 text-sm text-ink-2 transition-[background-color] duration-(--dur-micro) hover:bg-paper-2"
+              >
+                <ImageIcon className="size-4" aria-hidden />
+                <span>
+                  원본 사진 <span className="tabular-nums">{images.length}</span>장
+                </span>
+                <ChevronDown className={cx('size-4 text-neutral transition-transform duration-(--dur-short)', showImages && 'rotate-180')} aria-hidden />
+              </button>
+              {showImages && <ImageGallery className="mt-3" images={images} />}
+            </div>
+          )}
         </Section>
 
         <Section title="내 답">
