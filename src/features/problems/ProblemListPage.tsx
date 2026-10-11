@@ -1,7 +1,7 @@
-import { Plus } from 'lucide-react'
+import { Plus, Printer } from 'lucide-react'
 import { useMemo } from 'react'
 import { usePageTitle } from '@/lib/usePageTitle'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, useCategories, useLatestAttempts, useProblems, useTags } from '@/db'
 import { Button, EmptyState } from '@/components/ui'
@@ -13,6 +13,7 @@ import { useListFilter } from './useListFilter'
 export function ProblemListPage() {
   usePageTitle('문제')
   const navigate = useNavigate()
+  const location = useLocation()
   const { filter, update, toggleTag, reset } = useListFilter()
   const query = useMemo(() => toProblemFilter(filter), [filter])
   const problems = useProblems(query)
@@ -43,6 +44,17 @@ export function ProblemListPage() {
             )}
           </p>
         </div>
+        {total > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            icon={<Printer className="size-4" aria-hidden />}
+            onClick={() => navigate({ pathname: '/print', search: location.search })}
+            title="지금 필터 그대로 인쇄 (p)"
+          >
+            인쇄
+          </Button>
+        )}
       </div>
 
       {total === 0 ? (

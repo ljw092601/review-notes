@@ -38,6 +38,11 @@ export function Layout() {
         },
       },
       {
+        key: 'p',
+        label: '인쇄',
+        run: () => navigate({ pathname: '/print', search: location.pathname === '/' ? location.search : '' }),
+      },
+      {
         key: 'e',
         label: '편집',
         run: () => {
@@ -46,14 +51,14 @@ export function Layout() {
         },
       },
     ],
-    [navigate, location.pathname],
+    [navigate, location.pathname, location.search],
   )
   useShortcuts(shortcuts)
 
   return (
     <ToastProvider>
       <div className="min-h-dvh">
-        <header className="sticky top-0 z-30 border-b border-rule bg-paper/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-rule bg-paper/90 backdrop-blur print:hidden">
           <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2.5 sm:gap-6 sm:px-4">
             <NavLink to="/" className="rounded-control text-[1.05rem] font-bold tracking-tight text-ink">
               오답노트
@@ -99,7 +104,7 @@ export function Layout() {
           </div>
         </header>
         <BackupAgent />
-        <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8 print:max-w-none print:p-0">
           <Outlet />
         </main>
         <ShortcutHelp open={helpOpen} onClose={() => setHelpOpen(false)} />

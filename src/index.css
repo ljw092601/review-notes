@@ -149,6 +149,48 @@ html[data-theme='dark'] .cat-stripe {
   border-left-color: oklch(62% calc(0.13 * var(--cat-c, 1)) var(--cat-h, 60));
 }
 
+/* 인쇄: 도구 막대·헤더는 print:hidden으로 빠지고, .print-sheet만 종이에 나온다 */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm 12mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  .print-sheet {
+    font-size: 11pt;
+  }
+  .print-item {
+    break-inside: avoid;
+  }
+  .print-break-before {
+    break-before: page;
+  }
+  .print-keep-next {
+    break-after: avoid;
+  }
+  .print-sheet .md pre,
+  .print-sheet .md code {
+    background: #f3f3f3 !important;
+    color: #111 !important;
+  }
+  .print-sheet .md table,
+  .print-sheet .md th,
+  .print-sheet .md td {
+    border-color: #999 !important;
+  }
+  .print-sheet .md th {
+    background: #eee !important;
+  }
+  .print-sheet a {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

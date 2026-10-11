@@ -9,6 +9,7 @@ const Edit = lazy(() => import('./features/problems/ProblemEditPage').then((m) =
 const Draft = lazy(() => import('./features/problems/DraftPage').then((m) => ({ default: m.DraftPage })))
 const Quiz = lazy(() => import('./features/quiz/QuizPage').then((m) => ({ default: m.QuizPage })))
 const Transfer = lazy(() => import('./features/transfer/TransferPage').then((m) => ({ default: m.TransferPage })))
+const Print = lazy(() => import('./features/print/PrintPage').then((m) => ({ default: m.PrintPage })))
 
 function Loading({ children }: { children: ReactNode }) {
   return <Suspense fallback={null}>{children}</Suspense>
@@ -50,6 +51,14 @@ export function TransferPage() {
   return (
     <Loading>
       <Transfer />
+    </Loading>
+  )
+}
+
+export function PrintPage() {
+  return (
+    <Loading>
+      <Print />
     </Loading>
   )
 }
