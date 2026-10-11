@@ -4,6 +4,7 @@ import { NavLink, Outlet, matchPath, useLocation, useNavigate } from 'react-rout
 import { useDraftCount } from '@/db'
 import { cx } from '@/lib/cx'
 import { useShortcuts, type Shortcut } from '@/lib/useShortcuts'
+import { BackupAgent } from './BackupAgent'
 import { ShortcutHelp } from './ShortcutHelp'
 import { ThemeToggle } from './ThemeToggle'
 import { ToastProvider } from './toast'
@@ -97,6 +98,7 @@ export function Layout() {
             </div>
           </div>
         </header>
+        <BackupAgent />
         <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
           <Outlet />
         </main>

@@ -238,7 +238,7 @@ describe('가져오기', () => {
     await addAttempt(p.id, { answer: '네트워크', result: 'correct', memo: '기억남' })
     await addCategory('클라우드')
     const backup = await exportAll()
-    expect(backup.problems[0].images[0].dataUrl.startsWith('data:image/jpeg;base64,')).toBe(true)
+    expect(backup.problems[0].images[0]).toMatchObject({ dataUrl: expect.stringMatching(/^data:image\/jpeg;base64,/) })
 
     await db.delete()
     await db.open()

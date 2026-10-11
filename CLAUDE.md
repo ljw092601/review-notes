@@ -19,6 +19,9 @@ npm run test       # vitest run
 
 ## 폴더 규칙
 - `src/db/` Dexie 인스턴스·스키마·마이그레이션
+  - `src/db/backup.ts` 자동 백업: 폴더에 `review-notes.json`+`images/`+`history/` 쓰기, 폴더에서 복원, 변경 구독(`onDataChanged`)
+  - `src/db/settings.ts` key-value 설정 테이블(백업 폴더 핸들, 마지막 백업 시각)
+- `src/lib/fsAccess.ts` File System Access API 래퍼(폴더 선택, 권한, 파일 읽기/쓰기)와 lib.dom에 없는 타입 선언
 - `src/models/` 타입, zod 스키마(가져오기 파일 검증), 문제 유형 시드
 - `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer
 - `src/components/` 공용 UI
@@ -30,4 +33,5 @@ npm run test       # vitest run
 - 서버 없음. 모든 데이터는 브라우저 IndexedDB. 외부 API 호출 금지
 - UI 문구는 한국어
 - 데이터 스키마를 바꾸면 Dexie 버전을 올리고 마이그레이션을 쓴다
+- File System Access API는 Chrome·Edge 전용이라 항상 미지원 분기를 둔다(`isFsAccessSupported`). 권한 요청은 사용자 클릭 안에서만
 - 기능을 끝내면 `npm run typecheck && npm run lint && npm run test`가 통과해야 한다

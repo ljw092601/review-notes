@@ -28,10 +28,18 @@ export const problemInputSchema = z.object({
   tags: tagsSchema,
 })
 
-export const importImageSchema = z.object({
-  name: z.string().min(1),
-  dataUrl: z.string().regex(/^data:[\w/+.-]+;base64,/, 'base64 data URL 형식이어야 합니다'),
-})
+/** 사진. base64가 들어 있거나(가져오기 파일), 백업 폴더 안의 상대 경로만 있다(자동 백업 파일) */
+export const importImageSchema = z.union([
+  z.object({
+    name: z.string().min(1),
+    dataUrl: z.string().regex(/^data:[\w/+.-]+;base64,/, 'base64 data URL 형식이어야 합니다'),
+  }),
+  z.object({
+    name: z.string().min(1),
+    file: z.string().min(1),
+  }),
+])
+export type ImportImage = z.infer<typeof importImageSchema>
 
 /** 가져오기 파일의 문제 한 건. Claude가 만드는 파일은 explanation/wrongReason/status가 없고, 백업 파일은 전부 있다. */
 export const importProblemSchema = problemInputSchema.extend({

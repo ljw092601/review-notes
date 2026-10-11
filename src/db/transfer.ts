@@ -11,6 +11,8 @@ export interface ImportPreview {
   items: Array<{ problem: ImportProblem; duplicateOf?: Problem }>
   /** DB에 없는 유형 id. 가져올 때 '기타'로 바뀐다 */
   unknownCategories: string[]
+  /** base64 없이 파일 경로만 있는 사진 수. 자동 백업 파일을 직접 드롭했을 때 생기며, 이 사진들은 가져오지 않는다 */
+  missingImages: number
 }
 
 export interface ImportResult {
@@ -64,7 +66,8 @@ export async function previewImport(json: unknown): Promise<ImportPreview> {
       file.problems.map((p) => p.category).filter((c) => !categoryIds.has(c) && !incomingCategoryIds.has(c)),
     ),
   ]
-  return { file, items, unknownCategories }
+  const missingImages = file.problems.reduce((n, p) => n + p.images.filter((img) => !('dataUrl' in img)).length, 0)
+  return { file, items, unknownCategories, missingImages }
 }
 
 export async function importProblems(
@@ -98,6 +101,7 @@ export async function importProblems(
         updatedAt: updatedAt ?? now,
       })
       for (const image of images) {
+        if (!('dataUrl' in image)) continue
         await db.images.add({
           id: newId(),
           problemId: id,

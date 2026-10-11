@@ -59,3 +59,9 @@ export interface Attempt {
 
 /** 문제 생성/수정 시 사용자가 채우는 필드 */
 export type ProblemInput = Omit<Problem, 'id' | 'createdAt' | 'updatedAt'>
+
+/** 앱 설정 한 건. 파일 시스템 핸들처럼 구조화 복제가 되는 값이면 무엇이든 */
+export interface Setting {
+  key: string
+  value: unknown
+}

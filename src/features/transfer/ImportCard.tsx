@@ -202,6 +202,12 @@ function PreviewPanel({
         </p>
       )}
 
+      {preview.missingImages > 0 && (
+        <p className="mt-2 rounded-control bg-warn-soft px-3 py-2 text-xs text-warn">
+          사진 {preview.missingImages}장은 경로만 있어 가져오지 않아요. 자동 백업 파일은 ‘자동 백업 → 폴더에서 복원’으로 불러오세요.
+        </p>
+      )}
+
       {preview.items.length === 0 ? (
         <p className="mt-3 text-sm text-neutral">파일에 문제가 없어요.</p>
       ) : (
