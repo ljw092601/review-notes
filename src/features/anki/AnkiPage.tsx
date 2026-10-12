@@ -26,7 +26,7 @@ import {
 } from './cloze'
 import { markdownToHtml } from './markdownHtml'
 
-const DEFAULT_DECK = '정보처리기사 오답노트'
+const DEFAULT_DECK = '정처기'
 const DEFAULT_NOTE_TYPE = 'Cloze'
 
 interface Entry {
@@ -52,7 +52,9 @@ export function AnkiPage() {
   const [category, setCategory] = useState('')
   const [onlyDone, setOnlyDone] = useState(false)
   const [perTerm, setPerTerm] = useState(false)
-  const [includeQuestion, setIncludeQuestion] = useState(true)
+  /** 체크를 푼 문제 id. 기본은 전부 포함이라 '뺀 것'만 기억한다 */
+  const [excluded, setExcluded] = useState<Set<string>>(() => new Set())
+  const [includeQuestion, setIncludeQuestion] = useState(false)
   const [deck, setDeck] = useState(DEFAULT_DECK)
   const [noteType, setNoteType] = useState(DEFAULT_NOTE_TYPE)
   const problems = useProblems({ category: category || undefined, status: onlyDone ? 'done' : undefined, sort: 'createdDesc' })
@@ -75,7 +77,17 @@ export function AnkiPage() {
   if (!entries || !problems || !categories) return null
   const categoryMap = new Map(categories.map((c) => [c.id, c]))
   const ready = entries.filter((e) => e.blanks.length > 0)
+  const selected = ready.filter((e) => !excluded.has(e.problem.id))
   const noExplanation = problems.length - entries.length
+
+  function setChecked(id: string, on: boolean) {
+    setExcluded((prev) => {
+      const next = new Set(prev)
+      if (on) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   async function save(entry: Entry, blanks: Blank[] | null) {
     const next: Record<string, StoredBlank[]> = { ...(stored ?? {}) }
@@ -86,7 +98,7 @@ export function AnkiPage() {
 
   function exportFile() {
     let cards = 0
-    const rows: AnkiRow[] = ready.map((e) => {
+    const rows: AnkiRow[] = selected.map((e) => {
       const r = renderAnki(e.html, e.blanks, { perTerm })
       cards += r.cards
       return {
@@ -113,8 +125,8 @@ export function AnkiPage() {
           <Button variant="ghost" icon={<ArrowLeft className="size-4" aria-hidden />} onClick={() => navigate('/transfer')}>
             가져오기 / 내보내기
           </Button>
-          <Button variant="primary" icon={<Download className="size-4" aria-hidden />} onClick={exportFile} disabled={ready.length === 0}>
-            Anki 파일 받기
+          <Button variant="primary" icon={<Download className="size-4" aria-hidden />} onClick={exportFile} disabled={selected.length === 0}>
+            {selected.length > 0 ? `${selected.length}개 Anki 파일 받기` : 'Anki 파일 받기'}
           </Button>
         </div>
       </div>
@@ -148,11 +160,23 @@ export function AnkiPage() {
             <span className="text-xs text-neutral">한국어 Anki면 ‘빈칸 채우기’. 비우면 가져올 때 직접 골라요</span>
           </label>
         </div>
-        <p className="mt-3 text-sm text-muted">
-          내보낼 노트 <span className="font-medium text-ink tabular-nums">{ready.length}</span>개
-          {entries.length - ready.length > 0 && <span className="text-neutral"> · 빈칸 없는 {entries.length - ready.length}개는 빠짐</span>}
-          {noExplanation > 0 && <span className="text-neutral"> · 풀이 없는 {noExplanation}개는 빠짐</span>}
-        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
+          <span>
+            선택 <span className="font-medium text-ink tabular-nums">{selected.length}</span> / {ready.length}개
+            {entries.length - ready.length > 0 && <span className="text-neutral"> · 빈칸 없는 {entries.length - ready.length}개는 빠짐</span>}
+            {noExplanation > 0 && <span className="text-neutral"> · 풀이 없는 {noExplanation}개는 빠짐</span>}
+          </span>
+          {ready.length > 0 && (
+            <span className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setExcluded(new Set())} disabled={selected.length === ready.length}>
+                전체 선택
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setExcluded(new Set(ready.map((e) => e.problem.id)))} disabled={selected.length === 0}>
+                전체 해제
+              </Button>
+            </span>
+          )}
+        </div>
       </Card>
 
       {entries.length === 0 ? (
@@ -164,6 +188,8 @@ export function AnkiPage() {
               key={e.problem.id}
               entry={e}
               category={categoryMap.get(e.problem.category)}
+              checked={e.blanks.length > 0 && !excluded.has(e.problem.id)}
+              onCheck={(on) => setChecked(e.problem.id, on)}
               onChange={(blanks) => void save(e, blanks)}
             />
           ))}
@@ -182,7 +208,19 @@ function Check({ label, checked, onChange }: { label: string; checked: boolean; 
   )
 }
 
-function EntryCard({ entry, category, onChange }: { entry: Entry; category?: Category; onChange: (blanks: Blank[] | null) => void }) {
+function EntryCard({
+  entry,
+  category,
+  checked,
+  onCheck,
+  onChange,
+}: {
+  entry: Entry
+  category?: Category
+  checked: boolean
+  onCheck: (on: boolean) => void
+  onChange: (blanks: Blank[] | null) => void
+}) {
   const { problem, html, blanks, auto, custom } = entry
   const preview = useMemo(() => renderPreview(html, blanks), [html, blanks])
   const context = `${problem.explanation}\n${problem.correctAnswer}\n${problem.tags.join(' ')}`
@@ -196,8 +234,16 @@ function EntryCard({ entry, category, onChange }: { entry: Entry; category?: Cat
 
   return (
     <li>
-      <Card as="article" className={cx('p-4 sm:p-5', blanks.length === 0 && 'border-warn/50')}>
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs text-neutral">
+      <Card as="article" className={cx('p-4 sm:p-5', blanks.length === 0 && 'border-warn/50', blanks.length > 0 && !checked && 'opacity-60')}>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-neutral">
+          <input
+            type="checkbox"
+            checked={checked}
+            disabled={blanks.length === 0}
+            onChange={(e) => onCheck(e.target.checked)}
+            aria-label={`${problem.question.replace(/\s+/g, ' ').slice(0, 40)} 내보내기에 포함`}
+            className="size-4 accent-(--color-accent)"
+          />
           <span className="font-medium text-ink-2">{category?.name ?? problem.category}</span>
           {problem.source && <span>{problem.source}</span>}
           <span className="ml-auto tabular-nums">{blanks.length === 0 ? '빈칸 없음 — 내보내지 않음' : `빈칸 ${blanks.length}개`}</span>
