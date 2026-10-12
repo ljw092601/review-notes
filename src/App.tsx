@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { NotFoundPage, RouteErrorPage } from './components/NotFoundPage'
 import { ProblemListPage } from './features/problems/ProblemListPage'
-import { DraftPage, PrintPage, ProblemDetailPage, ProblemEditPage, QuizPage, TransferPage } from './pages'
+import { AnkiPage, DraftPage, PrintPage, ProblemDetailPage, ProblemEditPage, QuizPage, TransferPage } from './pages'
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +18,7 @@ export const router = createBrowserRouter([
       { path: 'quiz', element: <QuizPage /> },
       { path: 'transfer', element: <TransferPage /> },
       { path: 'print', element: <PrintPage /> },
+      { path: 'anki', element: <AnkiPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

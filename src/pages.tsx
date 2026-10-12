@@ -10,6 +10,7 @@ const Draft = lazy(() => import('./features/problems/DraftPage').then((m) => ({ 
 const Quiz = lazy(() => import('./features/quiz/QuizPage').then((m) => ({ default: m.QuizPage })))
 const Transfer = lazy(() => import('./features/transfer/TransferPage').then((m) => ({ default: m.TransferPage })))
 const Print = lazy(() => import('./features/print/PrintPage').then((m) => ({ default: m.PrintPage })))
+const Anki = lazy(() => import('./features/anki/AnkiPage').then((m) => ({ default: m.AnkiPage })))
 
 function Loading({ children }: { children: ReactNode }) {
   return <Suspense fallback={null}>{children}</Suspense>
@@ -59,6 +60,14 @@ export function PrintPage() {
   return (
     <Loading>
       <Print />
+    </Loading>
+  )
+}
+
+export function AnkiPage() {
+  return (
+    <Loading>
+      <Anki />
     </Loading>
   )
 }

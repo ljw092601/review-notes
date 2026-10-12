@@ -23,7 +23,7 @@ npm run test       # vitest run
   - `src/db/settings.ts` key-value 설정 테이블(백업 폴더 핸들, 마지막 백업 시각)
 - `src/lib/fsAccess.ts` File System Access API 래퍼(폴더 선택, 권한, 파일 읽기/쓰기)와 lib.dom에 없는 타입 선언
 - `src/models/` 타입, zod 스키마(가져오기 파일 검증), 문제 유형 시드
-- `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer
+- `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer / print(인쇄) / anki(빈칸 카드 내보내기: `cloze.ts` 순수 로직, `markdownHtml.tsx` 마크다운→HTML)
 - `src/components/` 공용 UI
 - `inbox/` 문제 사진 입력 (gitignore). 결과 JSON도 같은 날짜 폴더(`inbox/<날짜>/<날짜>.json`)에 둔다
 - `.claude/skills/import-problems/` 사진 → 가져오기 JSON 변환 스킬. `SKILL.md`(규칙·분류표) + `build.mjs`(중간 파일에 이미지 base64 합치기). 사용자가 "오답 정리해줘"라고 하면 이 스킬을 따른다

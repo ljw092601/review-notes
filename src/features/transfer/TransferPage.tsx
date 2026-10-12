@@ -1,4 +1,5 @@
 import { usePageTitle } from '@/lib/usePageTitle'
+import { AnkiCard } from './AnkiCard'
 import { CategoryManager } from './CategoryManager'
 import { BackupCard } from './BackupCard'
 import { ExportCard } from './ExportCard'
@@ -14,6 +15,7 @@ export function TransferPage() {
         <ImportCard />
         <BackupCard />
         <ExportCard />
+        <AnkiCard />
         <CategoryManager />
       </div>
     </div>

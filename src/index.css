@@ -149,6 +149,26 @@ html[data-theme='dark'] .cat-stripe {
   border-left-color: oklch(62% calc(0.13 * var(--cat-c, 1)) var(--cat-h, 60));
 }
 
+/* Anki 빈칸 미리보기: 단어를 클릭해 빈칸으로 */
+.anki-preview .word {
+  cursor: pointer;
+  border-radius: 3px;
+}
+.anki-preview .word:hover {
+  background: var(--color-paper-3, var(--color-rule));
+}
+.anki-preview mark.cloze {
+  cursor: pointer;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-deep);
+  border-bottom: 2px solid var(--color-accent);
+  padding: 0 0.15em;
+  border-radius: 3px;
+}
+.anki-preview mark.cloze:hover {
+  text-decoration: line-through;
+}
+
 /* 인쇄: 도구 막대·헤더는 print:hidden으로 빠지고, .print-sheet만 종이에 나온다 */
 @media print {
   @page {

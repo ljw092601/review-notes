@@ -7,6 +7,8 @@ export interface SettingValue {
   backupDir: FileSystemDirectoryHandle
   /** 마지막 자동 백업 완료 시각 */
   backupLastAt: number
+  /** Anki 내보내기에서 문제별로 고른 빈칸 자리. 풀이 HTML의 텍스트 노드 순번 + 글자 범위 + 그때 글자 */
+  ankiBlanks: Record<string, Array<{ node: number; start: number; end: number; text: string }>>
 }
 export type SettingKey = keyof SettingValue
 
