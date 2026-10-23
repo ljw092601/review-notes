@@ -57,6 +57,18 @@ export interface Attempt {
   attemptedAt: number
 }
 
+/** 기출 회차 한 번 푼 기록. 문제 번호(1부터)를 키로 쓴다 */
+export interface ExamResult {
+  id: string
+  /** `2024-1` */
+  examId: string
+  takenAt: number
+  answers: Record<number, string>
+  results: Record<number, AttemptResult>
+  /** 100점 만점. 맞음 = 문항 배점, 부분 = 절반 */
+  score: number
+}
+
 /** 문제 생성/수정 시 사용자가 채우는 필드 */
 export type ProblemInput = Omit<Problem, 'id' | 'createdAt' | 'updatedAt'>
 

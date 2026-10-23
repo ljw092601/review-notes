@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 import { DEFAULT_CATEGORIES } from '@/models/categories'
-import type { Attempt, Category, ImageRecord, Problem, Setting } from '@/models/types'
+import type { Attempt, Category, ExamResult, ImageRecord, Problem, Setting } from '@/models/types'
 
 export class ReviewNotesDB extends Dexie {
   problems!: EntityTable<Problem, 'id'>
@@ -8,6 +8,7 @@ export class ReviewNotesDB extends Dexie {
   attempts!: EntityTable<Attempt, 'id'>
   categories!: EntityTable<Category, 'id'>
   settings!: EntityTable<Setting, 'key'>
+  examResults!: EntityTable<ExamResult, 'id'>
 
   constructor(name = 'review-notes') {
     super(name)
@@ -21,6 +22,10 @@ export class ReviewNotesDB extends Dexie {
     // v2: 앱 설정(자동 백업 폴더 핸들 등). key-value
     this.version(2).stores({
       settings: 'key',
+    })
+    // v3: 기출 회차 풀이 기록. 새 테이블이라 옮길 데이터는 없다
+    this.version(3).stores({
+      examResults: 'id, examId, takenAt',
     })
     this.on('populate', () => {
       void this.categories.bulkAdd(DEFAULT_CATEGORIES)

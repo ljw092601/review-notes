@@ -10,6 +10,8 @@ const Draft = lazy(() => import('./features/problems/DraftPage').then((m) => ({ 
 const Quiz = lazy(() => import('./features/quiz/QuizPage').then((m) => ({ default: m.QuizPage })))
 const Transfer = lazy(() => import('./features/transfer/TransferPage').then((m) => ({ default: m.TransferPage })))
 const Print = lazy(() => import('./features/print/PrintPage').then((m) => ({ default: m.PrintPage })))
+const Exams = lazy(() => import('./features/exams/ExamListPage').then((m) => ({ default: m.ExamListPage })))
+const Exam = lazy(() => import('./features/exams/ExamPage').then((m) => ({ default: m.ExamPage })))
 const Anki = lazy(() => import('./features/anki/AnkiPage').then((m) => ({ default: m.AnkiPage })))
 
 function Loading({ children }: { children: ReactNode }) {
@@ -68,6 +70,38 @@ export function AnkiPage() {
   return (
     <Loading>
       <Anki />
+    </Loading>
+  )
+}
+
+export function ExamListPage() {
+  return (
+    <Loading>
+      <Exams />
+    </Loading>
+  )
+}
+
+export function ExamPage() {
+  return (
+    <Loading>
+      <Exam />
+    </Loading>
+  )
+}
+
+export function MockListPage() {
+  return (
+    <Loading>
+      <Exams kind="mock" />
+    </Loading>
+  )
+}
+
+export function MockPage() {
+  return (
+    <Loading>
+      <Exam kind="mock" />
     </Loading>
   )
 }

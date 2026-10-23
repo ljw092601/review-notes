@@ -133,17 +133,24 @@ export function tally(state: QuizState): Record<AttemptResult, number> {
 /** 단답형은 공백·대소문자·괄호 안 보조 표기를 무시하고 비교해 채점을 미리 제안한다 */
 export function suggestResult(problem: Problem, answer: string): AttemptResult | undefined {
   if (problem.answerType === 'essay') return undefined
+  return suggestByText(problem.correctAnswer, answer)
+}
+
+/** 정답 문자열과 비교한 채점 제안. 확신이 없으면 undefined. 빈칸 번호(①②…)도 무시한다 */
+export function suggestByText(correctAnswer: string, answer: string): AttemptResult | undefined {
   const norm = (s: string) =>
     s
       .toLowerCase()
       .replace(/\([^)]*\)/g, ' ')
+      .replace(/[①-⑳]/g, ' ')
       .replace(/[\s.,;:'"`*_-]+/g, '')
+  if (answer.trim() && answer.trim() === correctAnswer.trim()) return 'correct'
   const mine = norm(answer)
-  if (!mine) return 'wrong'
-  const correct = norm(problem.correctAnswer)
+  if (!mine) return answer.trim() ? undefined : 'wrong'
+  const correct = norm(correctAnswer)
   if (mine === correct) return 'correct'
   // 괄호 보조 표기 하나라도 맞으면 맞음으로 제안 (예: "제1정규형(1NF)" ↔ "1NF")
-  const alternatives = [...problem.correctAnswer.matchAll(/\(([^)]*)\)/g)].map((m) => norm(m[1]))
+  const alternatives = [...correctAnswer.matchAll(/\(([^)]*)\)/g)].map((m) => norm(m[1]))
   if (alternatives.includes(mine)) return 'correct'
   return undefined
 }

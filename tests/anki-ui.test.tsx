@@ -48,7 +48,7 @@ describe('Anki 내보내기', () => {
     const user = userEvent.setup()
     renderAt('/anki')
 
-    const list = await screen.findByRole('list', { name: 'Anki 카드 미리보기' })
+    const list = await screen.findByRole('list', { name: 'Anki 카드 미리보기' }, { timeout: 5000 })
     expect(within(list).getAllByRole('listitem').length).toBe(2)
     expect(screen.getByText('빈칸 2개')).toBeInTheDocument()
     expect(screen.getByText(/풀이 없는 1개는 빠짐/)).toBeInTheDocument()

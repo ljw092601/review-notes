@@ -9,6 +9,8 @@ const GROUPS: Array<{ title: string; items: Array<[keys: string[], label: string
       [['l'], '문제 목록'],
       [['i'], '입력 필요'],
       [['r'], '복습'],
+      [['x'], '기출 풀기'],
+      [['m'], '모의고사'],
       [['t'], '가져오기 / 내보내기'],
       [['/'], '목록에서 검색'],
       [['?'], '이 도움말'],
