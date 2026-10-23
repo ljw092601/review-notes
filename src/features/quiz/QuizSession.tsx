@@ -1,4 +1,4 @@
-import { Check, Eye, LogOut, Minus, X } from 'lucide-react'
+import { Eye, LogOut } from 'lucide-react'
 import { useEffect, useId, useState, type KeyboardEvent } from 'react'
 import { CategoryBadge } from '@/components/badges'
 import { ImageGallery } from '@/components/ImageGallery'
@@ -6,20 +6,17 @@ import { Markdown } from '@/components/Markdown'
 import { Button, Card, SectionTitle, Textarea } from '@/components/ui'
 import { useCategories, useImages } from '@/db'
 import { cx } from '@/lib/cx'
+import { splitFigures } from '@/lib/figures'
 import { ANSWER_TYPE_LABEL } from '@/lib/labels'
 import type { AttemptResult, Problem } from '@/models/types'
+import { GRADES } from './grades'
 import { suggestResult, type QuizState } from './session'
-
-const GRADES: Array<{ value: AttemptResult; label: string; key: string; icon: typeof Check; className: string }> = [
-  { value: 'wrong', label: '틀림', key: '1', icon: X, className: 'border-error/40 text-error hover:bg-error-soft aria-pressed:bg-error-soft aria-pressed:border-error' },
-  { value: 'partial', label: '부분', key: '2', icon: Minus, className: 'border-warn/40 text-warn hover:bg-warn-soft aria-pressed:bg-warn-soft aria-pressed:border-warn' },
-  { value: 'correct', label: '맞음', key: '3', icon: Check, className: 'border-success/40 text-success hover:bg-success-soft aria-pressed:bg-success-soft aria-pressed:border-success' },
-]
 
 function Question({ problem, uid }: { problem: Problem; uid: string }) {
   const categories = useCategories()
   const images = useImages(problem.id)
   const category = categories?.find((c) => c.id === problem.category)
+  const originals = splitFigures(images ?? [], problem.question).originals
   return (
     <section aria-labelledby={`${uid}-q`}>
       <div className="flex flex-wrap items-center gap-1.5 text-xs text-neutral">
@@ -30,8 +27,10 @@ function Question({ problem, uid }: { problem: Problem; uid: string }) {
       <SectionTitle className="mt-4">
         <span id={`${uid}-q`}>문제</span>
       </SectionTitle>
-      <Markdown className="mt-2 text-[1.05rem]">{problem.question}</Markdown>
-      {images && images.length > 0 && <ImageGallery className="mt-4" images={images} />}
+      <Markdown className="mt-2 text-[1.05rem]" images={images}>
+        {problem.question}
+      </Markdown>
+      {originals.length > 0 && <ImageGallery className="mt-4" images={originals} />}
     </section>
   )
 }

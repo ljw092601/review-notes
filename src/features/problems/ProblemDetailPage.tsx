@@ -8,6 +8,7 @@ import { Markdown } from '@/components/Markdown'
 import { useToast } from '@/components/toast-context'
 import { Badge, Button, Card, Chip, EmptyState, SectionTitle } from '@/components/ui'
 import { cx } from '@/lib/cx'
+import { splitFigures } from '@/lib/figures'
 import { deleteProblemWithSnapshot, restoreProblem, useAttempts, useCategories, useImages, useProblem } from '@/db'
 import { excerpt, formatDate, formatDateTime } from '@/lib/text'
 import { usePageTitle } from '@/lib/usePageTitle'
@@ -34,6 +35,8 @@ export function ProblemDetailPage() {
   const attempts = useAttempts(id)
   const categories = useCategories()
   const category = useMemo(() => categories?.find((c) => c.id === problem?.category), [categories, problem])
+  // 본문에 들어간 그림은 접힌 원본 사진 목록에서 뺀다
+  const originals = useMemo(() => splitFigures(images ?? [], problem?.question ?? '').originals, [images, problem])
   const [deleting, setDeleting] = useState(false)
   const [showImages, setShowImages] = useState(false)
   usePageTitle(problem ? excerpt(problem.question, 40) : problem === null ? '문제 없음' : undefined)
@@ -105,7 +108,9 @@ export function ProblemDetailPage() {
 
       <Card as="article" className="mt-5 divide-y divide-rule px-5 py-5 sm:px-7 sm:py-6">
         <Section title="문제">
-          <Markdown className="text-[1.02rem]">{problem.question}</Markdown>
+          <Markdown className="text-[1.02rem]" images={images}>
+            {problem.question}
+          </Markdown>
           {problem.answerType === 'choice' && problem.choices && problem.choices.length > 0 && (
             <ol className="mt-3 space-y-1 text-[0.975rem]">
               {problem.choices.map((c, i) => (
@@ -116,7 +121,7 @@ export function ProblemDetailPage() {
               ))}
             </ol>
           )}
-          {images && images.length > 0 && (
+          {originals.length > 0 && (
             <div className="mt-4">
               <button
                 type="button"
@@ -126,11 +131,11 @@ export function ProblemDetailPage() {
               >
                 <ImageIcon className="size-4" aria-hidden />
                 <span>
-                  원본 사진 <span className="tabular-nums">{images.length}</span>장
+                  원본 사진 <span className="tabular-nums">{originals.length}</span>장
                 </span>
                 <ChevronDown className={cx('size-4 text-neutral transition-transform duration-(--dur-short)', showImages && 'rotate-180')} aria-hidden />
               </button>
-              {showImages && <ImageGallery className="mt-3" images={images} />}
+              {showImages && <ImageGallery className="mt-3" images={originals} />}
             </div>
           )}
         </Section>

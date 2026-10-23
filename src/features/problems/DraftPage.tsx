@@ -8,6 +8,7 @@ import { Markdown } from '@/components/Markdown'
 import { useToast } from '@/components/toast-context'
 import { Badge, Button, Card, Chip, EmptyState, SectionTitle } from '@/components/ui'
 import { db, updateProblem, useCategories, useImages } from '@/db'
+import { splitFigures } from '@/lib/figures'
 import { ANSWER_TYPE_LABEL } from '@/lib/labels'
 import { useObjectUrl } from '@/lib/useObjectUrl'
 import { usePageTitle } from '@/lib/usePageTitle'
@@ -39,6 +40,7 @@ function DraftEditor({
   const id = (name: string) => `${uid}-${name}`
   const toast = useToast()
   const images = useImages(problem.id)
+  const originals = useMemo(() => splitFigures(images ?? [], problem.question).originals, [images, problem.question])
   const lowConfidence = problem.answerConfidence === 'low'
 
   const [myAnswer, setMyAnswer] = useState(problem.myAnswer)
@@ -89,7 +91,9 @@ function DraftEditor({
 
         <section className="mt-5">
           <SectionTitle>문제</SectionTitle>
-          <Markdown className="mt-2.5 text-[1.02rem]">{problem.question}</Markdown>
+          <Markdown className="mt-2.5 text-[1.02rem]" images={images}>
+            {problem.question}
+          </Markdown>
           {problem.answerType === 'choice' && problem.choices && problem.choices.length > 0 && (
             <ol className="mt-3 space-y-1 text-[0.975rem]">
               {problem.choices.map((c, i) => (
@@ -100,12 +104,12 @@ function DraftEditor({
               ))}
             </ol>
           )}
-          {images && images.length > 0 && (
+          {originals.length > 0 && (
             <div className="mt-4 space-y-3">
-              {images.map((img) => (
+              {originals.map((img) => (
                 <LargeImage key={img.id} image={img} />
               ))}
-              {images.length > 1 && <ImageGallery images={images} />}
+              {originals.length > 1 && <ImageGallery images={originals} />}
             </div>
           )}
         </section>

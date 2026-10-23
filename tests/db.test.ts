@@ -218,6 +218,30 @@ describe('가져오기', () => {
     expect(await importProblems(again, { skipDuplicates: false })).toMatchObject({ added: 1 })
   })
 
+  test('본문이 바뀌어도 같은 원본 사진 이름(날짜·시각 포함)이면 중복으로 본다', async () => {
+    const first = claudeFile()
+    first.problems[0].source = ''
+    first.problems[0].images = [{ name: '스크린샷 2026-10-15 001010.png', dataUrl: PNG_DATA_URL }]
+    await importProblems(await previewImport(first))
+    const [before] = await db.problems.toArray()
+
+    const again = claudeFile()
+    again.problems[0].source = ''
+    again.problems[0].question = '다음 다이어그램의 명칭은?\n\n![그림](img:fig-1.png)'
+    again.problems[0].images = [
+      { name: '스크린샷 2026-10-15 001010.png', dataUrl: PNG_DATA_URL },
+      { name: 'fig-1.png', dataUrl: PNG_DATA_URL },
+    ]
+    const preview = await previewImport(again)
+    expect(preview.items[0].duplicateOf?.id).toBe(before.id)
+
+    // IMG_001.jpg 같은 흔한 이름은 식별에 쓰지 않는다
+    const generic = claudeFile()
+    generic.problems[0].source = ''
+    generic.problems[0].question = '전혀 다른 문제'
+    expect((await previewImport(generic)).items[0].duplicateOf).toBeUndefined()
+  })
+
   test('덮어쓰기는 같은 id를 유지한 채 파일 내용으로 갱신하고, 사용자 입력·복습 기록·등록일은 남긴다', async () => {
     await importProblems(await previewImport(claudeFile()))
     const [before] = await db.problems.toArray()

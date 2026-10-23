@@ -6,6 +6,7 @@ import { Markdown } from '@/components/Markdown'
 import { Button, Segmented, Select } from '@/components/ui'
 import { db, useCategories, useProblems } from '@/db'
 import { cx } from '@/lib/cx'
+import { splitFigures } from '@/lib/figures'
 import { useObjectUrl } from '@/lib/useObjectUrl'
 import { usePageTitle } from '@/lib/usePageTitle'
 import type { Category, ImageRecord, Problem } from '@/models/types'
@@ -27,7 +28,8 @@ export function PrintPage() {
   const categories = useCategories()
   const [today] = useState(formatToday)
   const ids = useMemo(() => problems?.map((p) => p.id) ?? [], [problems])
-  const wantImages = options.images && options.mode !== 'concepts'
+  // 본문 그림은 항상 필요하고, 원본 사진은 옵션
+  const wantImages = options.mode !== 'concepts'
   const images = useLiveQuery(
     () => (wantImages && ids.length ? db.images.where('problemId').anyOf(ids).toArray() : []),
     [wantImages, ids.join('\u0000')],
@@ -286,9 +288,11 @@ function NotesSheet({
         <li key={p.id} className="print-item py-4 text-sm leading-relaxed">
           <Meta problem={p} category={categoryMap.get(p.category)} index={i} />
           <div className="mt-1.5">
-            <Markdown className="text-[0.92rem]">{p.question}</Markdown>
+            <Markdown className="text-[0.92rem]" images={images.get(p.id)}>
+              {p.question}
+            </Markdown>
             <Choices problem={p} />
-            {options.images && <PrintImages images={images.get(p.id) ?? []} />}
+            {options.images && <PrintImages images={splitFigures(images.get(p.id) ?? [], p.question).originals} />}
           </div>
           <div className="mt-2.5 space-y-1.5">
             {options.myAnswer && p.myAnswer.trim() && (
@@ -359,9 +363,11 @@ function QuizSheet({ problems, categoryMap, images }: { problems: Problem[]; cat
           <li key={p.id} className="print-item py-4 text-sm leading-relaxed">
             <Meta problem={p} category={categoryMap.get(p.category)} index={i} />
             <div className="mt-1.5">
-              <Markdown className="text-[0.92rem]">{p.question}</Markdown>
+              <Markdown className="text-[0.92rem]" images={images.get(p.id)}>
+                {p.question}
+              </Markdown>
               <Choices problem={p} />
-              <PrintImages images={images.get(p.id) ?? []} />
+              <PrintImages images={splitFigures(images.get(p.id) ?? [], p.question).originals} />
             </div>
             <div className={cx('mt-3 border-b border-dotted border-[#999]', p.answerType === 'essay' ? 'h-16' : 'h-7')} aria-hidden />
           </li>

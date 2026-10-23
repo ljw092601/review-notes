@@ -2,8 +2,14 @@
 // 사진 폴더(inbox/<날짜>/) 안의 <날짜>.problems.json → 같은 폴더에 <날짜>.json (이미지 base64 포함)
 // 사용: node .claude/skills/import-problems/build.mjs inbox/2026-10-09 [--keep]
 //   --keep : 처리한 사진을 done/ 으로 옮기지 않는다
+// figures: 문제마다 [{ file, name?, crop? }]를 적으면 crop.py(Pillow)로 잘라 images에 넣는다.
+//   본문에서는 ![그림](img:fig-1.png) 처럼 name으로 참조한다. crop = 'auto'(기본) | 'full' | 'x,y,w,h'
+import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { basename, extname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const CROP_SCRIPT = fileURLToPath(new URL('./crop.py', import.meta.url))
 
 const CATEGORY_IDS = new Set([
   'programming', 'sql', 'database', 'network', 'security', 'os', 'design',
@@ -51,8 +57,37 @@ const problems = raw.problems.map((p, i) => {
     return { name: basename(name), dataUrl: `data:${mime};base64,${readFileSync(path).toString('base64')}` }
   })
 
+  // 그림: 원본에서 잘라 images 뒤에 붙인다. 본문이 img:이름 으로 가리킨다
+  const figures = Array.isArray(p.figures) ? p.figures : []
+  const figDir = join(photoDir, 'figures')
+  figures.forEach((f, j) => {
+    const name = f.name || `fig-${j + 1}.png`
+    const srcPath = join(photoDir, f.file ?? '')
+    if (!f.file || !existsSync(srcPath)) {
+      errors.push(`${at}.figures[${j}]: 파일 없음 ${f.file}`)
+      return
+    }
+    mkdirSync(figDir, { recursive: true })
+    const outPath = join(figDir, `${String(i + 1).padStart(2, '0')}-${name}`)
+    const run = spawnSync('python', [CROP_SCRIPT, srcPath, outPath, f.crop || 'auto'], { encoding: 'utf8' })
+    if (run.status !== 0) {
+      errors.push(`${at}.figures[${j}]: 자르기 실패 — ${(run.stderr || run.error?.message || '').trim().split('\n').pop()}`)
+      return
+    }
+    used.add(f.file)
+    images.push({ name, dataUrl: `data:image/png;base64,${readFileSync(outPath).toString('base64')}` })
+  })
+  const names = new Set(images.filter(Boolean).map((img) => img.name))
+  for (const m of String(p.question ?? '').matchAll(/\]\(img:([^)\s]+)\)/g)) {
+    if (!names.has(m[1])) errors.push(`${at}.question: img:${m[1]} 에 해당하는 figures 항목이 없음`)
+  }
+  for (const f of figures) {
+    const name = f.name || `fig-${figures.indexOf(f) + 1}.png`
+    if (!String(p.question ?? '').includes(`img:${name}`)) errors.push(`${at}.figures: ${name} 을 본문에서 참조하지 않음 (![그림](img:${name}))`)
+  }
+
   // 틀린 이유는 사용자 몫이라 제거하고, 항상 draft로 들어가게 한다. 풀이(explanation)는 Claude가 미리 채운 것을 그대로 둔다
-  const { imageFiles: _f, wrongReason: _w, status: _s, ...rest } = p
+  const { imageFiles: _f, figures: _g, wrongReason: _w, status: _s, ...rest } = p
   return {
     certification: '정보처리기사',
     source: '',
@@ -74,7 +109,7 @@ writeFileSync(outPath, JSON.stringify({ version: 1, exportedAt: Date.now(), prob
 if (!keep && used.size) {
   const done = join(photoDir, 'done')
   mkdirSync(done, { recursive: true })
-  for (const name of used) renameSync(join(photoDir, name), join(done, basename(name)))
+  for (const name of used) if (!name.startsWith('done/') && !name.startsWith('done\\')) renameSync(join(photoDir, name), join(done, basename(name)))
 }
 
 const bytes = statSizeMB(outPath)

@@ -53,20 +53,40 @@ function normalize(text: string): string {
   return text.toLowerCase().replace(/\s+/g, ' ').trim()
 }
 
-/** 같은 출처(비어 있지 않을 때) 또는 같은 문제 본문이면 중복으로 본다 */
+/** 스크린샷·휴대폰 사진처럼 날짜·시각이 들어간 이름만 문제를 식별하는 데 쓴다. IMG_001.jpg 같은 이름은 겹친다 */
+function isDistinctiveImageName(name: string): boolean {
+  return (name.match(/\d/g) ?? []).length >= 6
+}
+
+/**
+ * 같은 출처(비어 있지 않을 때), 같은 문제 본문, 또는 같은 원본 사진 이름이면 중복으로 본다.
+ * 사진 이름은 본문을 다시 옮겨 적어 덮어쓸 때(그림 삽입 등) 같은 문제를 찾는 마지막 수단이다.
+ */
 export async function previewImport(json: unknown): Promise<ImportPreview> {
   const file = parseImportFile(json)
   const existing = await db.problems.toArray()
   const bySource = new Map<string, Problem>()
   for (const p of existing) if (p.source?.trim()) bySource.set(normalize(p.source), p)
   const byQuestion = new Map(existing.map((p) => [normalize(p.question), p]))
+  const byId = new Map(existing.map((p) => [p.id, p]))
+  // 사진 이름 → 문제. 여러 문제가 같은 사진을 쓰면(한 장에 문제 여러 개) null로 두고 쓰지 않는다
+  const byImage = new Map<string, Problem | null>()
+  for (const img of await db.images.toArray()) {
+    if (!isDistinctiveImageName(img.name)) continue
+    const p = byId.get(img.problemId)
+    if (!p) continue
+    const key = normalize(img.name)
+    const prev = byImage.get(key)
+    byImage.set(key, prev === undefined || prev?.id === p.id ? p : null)
+  }
   const categoryIds = new Set((await db.categories.toArray()).map((c) => c.id))
   const incomingCategoryIds = new Set((file.categories ?? []).map((c) => c.id))
 
   const items = file.problems.map((problem) => {
     const duplicateOf =
       (problem.source?.trim() ? bySource.get(normalize(problem.source)) : undefined) ??
-      byQuestion.get(normalize(problem.question))
+      byQuestion.get(normalize(problem.question)) ??
+      problem.images.map((img) => byImage.get(normalize(img.name)) ?? undefined).find((p) => p !== undefined)
     return { problem, duplicateOf }
   })
   const unknownCategories = [
