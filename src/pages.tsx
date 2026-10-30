@@ -12,6 +12,7 @@ const Transfer = lazy(() => import('./features/transfer/TransferPage').then((m) 
 const Print = lazy(() => import('./features/print/PrintPage').then((m) => ({ default: m.PrintPage })))
 const Exams = lazy(() => import('./features/exams/ExamListPage').then((m) => ({ default: m.ExamListPage })))
 const Exam = lazy(() => import('./features/exams/ExamPage').then((m) => ({ default: m.ExamPage })))
+const Study = lazy(() => import('./features/study/StudyPage').then((m) => ({ default: m.StudyPage })))
 const Anki = lazy(() => import('./features/anki/AnkiPage').then((m) => ({ default: m.AnkiPage })))
 
 function Loading({ children }: { children: ReactNode }) {
@@ -86,6 +87,14 @@ export function ExamPage() {
   return (
     <Loading>
       <Exam />
+    </Loading>
+  )
+}
+
+export function StudyPage() {
+  return (
+    <Loading>
+      <Study />
     </Loading>
   )
 }

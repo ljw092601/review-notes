@@ -24,7 +24,7 @@ npm run test       # vitest run
 - `src/lib/fsAccess.ts` File System Access API 래퍼(폴더 선택, 권한, 파일 읽기/쓰기)와 lib.dom에 없는 타입 선언
 - `src/lib/figures.ts` 본문 그림 참조. 마크다운 `![설명](img:fig-1.png)`가 그 문제의 첨부 이미지(이름 일치)를 그 자리에 그린다. `Markdown`에 `images`를 넘겨야 동작하고, 참조된 그림은 '원본 사진' 목록에서 뺀다
 - `src/models/` 타입, zod 스키마(가져오기 파일 검증), 문제 유형 시드
-- `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer / print(인쇄) / anki(빈칸 카드 내보내기: `cloze.ts` 순수 로직, `markdownHtml.tsx` 마크다운→HTML) / exams(기출 풀기)
+- `src/features/<도메인>/` 화면과 훅. problems / quiz / transfer / print(인쇄) / anki(빈칸 카드 내보내기: `cloze.ts` 순수 로직, `markdownHtml.tsx` 마크다운→HTML) / exams(기출 풀기) / study(암기 탭: `content.ts`에 결합도·응집도·GoF·테스트 기법·DB 이론·라우팅 정리, 가리기 모드, `anki.ts`로 용어 가리기 Anki 기본 카드 파일)
   - `exams/data.ts`가 `inbox/기출문제/*.md`와 `images/`를 `import.meta.glob`으로 읽는다(inbox는 gitignore라 레포엔 문제 내용이 없고, 폴더가 없으면 빈 목록). `parse.ts`는 문제 파일(`## N번 <sub>(난이도 ..)</sub>`)과 정답 파일(`**유형**:` / `**정답**:` / `> 비고:`) 파서
   - `inbox/모의고사/`(`모의고사 N회 정보처리기사 실기.md` + `... 정답.md`, 형식은 기출과 같음)는 자체 출제 모의고사. `Exam.kind`가 `mock`, id `mock-N`, 화면은 `/mocks`(같은 `ExamListPage`·`ExamPage`에 `kind`)
   - 회차 풀이 기록은 `examResults` 테이블(Dexie v3, `src/db/exams.ts`). 오답노트로 옮길 때 출처(`2024년 1회 정보처리기사 실기 5번`)로 중복을 막는다

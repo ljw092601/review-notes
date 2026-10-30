@@ -11,6 +11,7 @@ const GROUPS: Array<{ title: string; items: Array<[keys: string[], label: string
       [['r'], '복습'],
       [['x'], '기출 풀기'],
       [['m'], '모의고사'],
+      [['k'], '암기'],
       [['t'], '가져오기 / 내보내기'],
       [['/'], '목록에서 검색'],
       [['?'], '이 도움말'],

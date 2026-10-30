@@ -16,6 +16,7 @@ const nav = [
   { to: '/quiz', label: '복습', key: 'r' },
   { to: '/exams', label: '기출', key: 'x' },
   { to: '/mocks', label: '모의고사', key: 'm' },
+  { to: '/study', label: '암기', key: 'k' },
   { to: '/transfer', label: '가져오기', key: 't' },
 ]
 
